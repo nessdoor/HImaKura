@@ -25,3 +25,23 @@ class TestXMLCreation(ut.TestCase):
                     '</image>').format(i=img_id, f=filename, u=universe, t1=tags[0], t2=tags[1])
 
         self.assertEqual(expected, new_xml)
+
+
+class TestXMLIngestion(ut.TestCase):
+    def test_without_optional_elements(self):
+        img_id = uuid.UUID('03012ba3-086c-4604-bd6a-aa3e1a78f389')
+        filename = "test.png"
+
+        self.assertEqual(xm.ImageMetadata(img_id, filename, None, None, None, None),
+                         xm.parse_xml(xm.generate_xml(img_id, filename)))
+
+    def test_with_optional_elements(self):
+        img_id = uuid.UUID('03012ba3-086c-4604-bd6a-aa3e1a78f389')
+        filename = "test.png"
+        author = "John Doe"
+        universe = "Example"
+        characters = ["M", "Q"]
+        tags = ["a", "bee"]
+
+        self.assertEqual(xm.ImageMetadata(img_id, filename, author, universe, characters, tags),
+                         xm.parse_xml(xm.generate_xml(img_id, filename, author, universe, characters, tags)))
