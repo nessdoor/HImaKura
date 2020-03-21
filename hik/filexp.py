@@ -16,7 +16,6 @@ class Carousel:
     _base_path: Path
     _image_files: List[Path]
     _current: int
-    _length: int
 
     def __init__(self, directory: Path):
         """
@@ -39,7 +38,6 @@ class Carousel:
                              if img.is_file() and guess_type(img)[0].partition('/')[0] == 'image']
         # The first step should bring us at position 0
         self._current = -1
-        self._length = len(self._image_files)
 
     def _get_metadata_path(self, image: Path) -> Optional[Path]:
         sibling_xml = self._base_path / (image.stem + '.xml')
@@ -58,13 +56,12 @@ class Carousel:
             return image_path, self._get_metadata_path(image_path)
         else:
             del self._image_files[self._current]
-            self._length -= 1
             return self.prev()
 
     def next(self) -> Tuple[Path, Path]:
         """Get the next image/metadata pair."""
 
-        if self._current == self._length - 1:
+        if self._current == len(self._image_files) - 1:
             raise StopIteration
 
         image_path = self._image_files[self._current + 1]
@@ -73,5 +70,4 @@ class Carousel:
             return image_path, self._get_metadata_path(image_path)
         else:
             del self._image_files[self._current + 1]
-            self._length -= 1
             return self.next()
