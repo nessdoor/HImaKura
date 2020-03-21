@@ -1,6 +1,16 @@
 from mimetypes import guess_type
 from pathlib import Path
 from typing import Tuple, List, Optional
+from uuid import uuid4
+
+from common import ImageMetadata
+
+import gi
+
+from xmngr import parse_xml
+
+gi.require_version('GdkPixbuf', '2.0')
+from gi.repository.GdkPixbuf import Pixbuf
 
 
 class Carousel:
@@ -71,3 +81,20 @@ class Carousel:
         else:
             del self._image_files[self._current + 1]
             return self.next()
+
+
+def load_bundle(img_file: Path, meta_file: Optional[Path]) -> Tuple[Pixbuf, ImageMetadata]:
+    """Load a pixbuf/metadata tuple from a couple of paths pointing to an image file and its eventual metadata"""
+
+    image = Pixbuf.new_from_file(str(img_file))
+
+    if meta_file is not None:
+        with meta_file.open() as mf:
+            try:
+                metadata = parse_xml(mf.read())
+            except OSError:
+                metadata = ImageMetadata(uuid4(), img_file.name, None, None, None, None)
+    else:
+        metadata = ImageMetadata(uuid4(), img_file.name, None, None, None, None)
+
+    return image, metadata
