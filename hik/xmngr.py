@@ -1,16 +1,8 @@
 import xml.etree.ElementTree as ElTree
-from typing import Iterable, NamedTuple, Optional
+from typing import Iterable, Optional
 from uuid import UUID
 
-
-# Move this to the appropriate module when the time comes
-class ImageMetadata(NamedTuple):
-    img_id: UUID
-    filename: str
-    author: Optional[str]
-    universe: Optional[str]
-    characters: Optional[Iterable[str]]
-    tags: Optional[Iterable[str]]
+from common import ImageMetadata
 
 
 def generate_xml(img_id: UUID,
