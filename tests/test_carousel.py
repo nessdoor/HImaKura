@@ -1,3 +1,4 @@
+import os
 import unittest as ut
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -94,3 +95,32 @@ class TestCarouselBehaviour(ut.TestCase):
 
         for file in fobs:
             file.close()
+
+    def test_file_deletion_after_creation(self):
+        test_dir_path = Path(self.test_dir.name)
+        first = "first.png"
+        fo = open(test_dir_path / first, 'a')
+        second = "second.png"
+        so = open(test_dir_path / second, 'a')
+        third = "third.png"
+        to = open(test_dir_path / third, 'a')
+
+        specimen = Carousel(test_dir_path)
+        fo.close()
+        os.remove(test_dir_path / first)
+        results = set()
+        for _ in range(0, 2):
+            results.add(specimen.next())
+
+        self.assertEqual({(test_dir_path / second, None), (test_dir_path / third, None)}, results)
+        self.assertRaises(StopIteration, lambda: specimen.next())
+
+        so.close()
+        os.remove(test_dir_path / second)
+        self.assertEqual((test_dir_path / third, None), specimen.prev())
+        self.assertRaises(StopIteration, lambda: specimen.prev())
+
+        to.close()
+        os.remove(test_dir_path / third)
+        self.assertRaises(StopIteration, lambda: specimen.next())
+        self.assertRaises(StopIteration, lambda: specimen.prev())

@@ -11,8 +11,6 @@ class Carousel:
     `(image path, metadata path)` tuples via return values.
     If the current image doesn't have a readable accompanying XML metadata file, `None` is returned.
     Trying to slide out of the collection's boundaries causes a `StopIteration` exception to be raised.
-    This object contains state information about the images' path. Any insertion or deletion of images into the base
-    directory after this object gets created will be ignored or will cause the carousel to return invalid paths.
     """
 
     _base_path: Path
@@ -56,7 +54,12 @@ class Carousel:
 
         self._current -= 1
         image_path = self._image_files[self._current]
-        return image_path, self._get_metadata_path(image_path)
+        if image_path.exists():
+            return image_path, self._get_metadata_path(image_path)
+        else:
+            del self._image_files[self._current]
+            self._length -= 1
+            return self.prev()
 
     def next(self) -> Tuple[Path, Path]:
         """Get the next image/metadata pair."""
@@ -64,6 +67,11 @@ class Carousel:
         if self._current == self._length - 1:
             raise StopIteration
 
-        self._current += 1
-        image_path = self._image_files[self._current]
-        return image_path, self._get_metadata_path(image_path)
+        image_path = self._image_files[self._current + 1]
+        if image_path.exists():
+            self._current += 1
+            return image_path, self._get_metadata_path(image_path)
+        else:
+            del self._image_files[self._current + 1]
+            self._length -= 1
+            return self.next()
