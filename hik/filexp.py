@@ -7,7 +7,7 @@ from common import ImageMetadata
 
 import gi
 
-from xmngr import parse_xml
+from xmngr import parse_xml, generate_xml
 
 gi.require_version('GdkPixbuf', '2.0')
 from gi.repository.GdkPixbuf import Pixbuf
@@ -98,3 +98,8 @@ def load_bundle(img_file: Path, meta_file: Optional[Path]) -> Tuple[Pixbuf, Imag
         metadata = ImageMetadata(uuid4(), img_file.name, None, None, None, None)
 
     return image, metadata
+
+
+def write_meta(metadata: ImageMetadata, dest: Path):
+    with dest.open('w') as o:
+        o.write(generate_xml(*metadata))
