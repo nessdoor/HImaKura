@@ -53,11 +53,20 @@ class Carousel:
         sibling_xml = self._base_path / (image.stem + '.xml')
         return sibling_xml if sibling_xml.exists() else None
 
+    def has_prev(self) -> bool:
+        """
+        Tell if the carousel can presently go back to a previous image.
+
+        Be aware that this method does not check if the previous image still exists.
+        """
+
+        return self._current > 0
+
     def prev(self) -> Tuple[Path, Path]:
         """Get the previous image/metadata pair."""
 
         # The initial index is negative, and we shouldn't go back to it, hence the `<=`.
-        if self._current <= 0:
+        if not self.has_prev():
             raise StopIteration
 
         self._current -= 1
@@ -68,10 +77,19 @@ class Carousel:
             del self._image_files[self._current]
             return self.prev()
 
+    def has_next(self) -> bool:
+        """
+        Tell if the carousel can presently move forward to the next image.
+
+        Be aware that this method does not check if the next image still exists.
+        """
+
+        return self._current < len(self._image_files) - 1
+
     def next(self) -> Tuple[Path, Path]:
         """Get the next image/metadata pair."""
 
-        if self._current == len(self._image_files) - 1:
+        if not self.has_next():
             raise StopIteration
 
         image_path = self._image_files[self._current + 1]
