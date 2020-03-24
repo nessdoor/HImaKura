@@ -1,18 +1,25 @@
 import gi
+
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
 
-class Handlers:
-    def quit_program(self):
-        Gtk.main_quit()
+def quit_program(*args):
+    Gtk.main_quit()
 
 
 builder = Gtk.Builder()
 builder.add_from_file("HImaKura.glade")
-builder.connect_signals(Handlers)
-
 main_window = builder.get_object("MainWindow")
+dir_selector = builder.get_object("DirectoryOpener")
+
+signal_mapping = {'show_dir_selector': lambda *args: dir_selector.show_all(),
+                  'hide_dir_selector': lambda *args: dir_selector.hide(),
+                  'hod_dir_selector': lambda *args: dir_selector.hide_on_delete(),
+                  'quit_program': lambda *args: Gtk.main_quit()}
+
+builder.connect_signals(signal_mapping)
+
 main_window.show_all()
 
 Gtk.main()

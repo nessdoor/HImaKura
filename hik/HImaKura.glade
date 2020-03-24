@@ -5,10 +5,12 @@
   <object class="GtkFileChooserDialog" id="DirectoryOpener">
     <property name="can_focus">False</property>
     <property name="type">popup</property>
+    <property name="modal">True</property>
     <property name="destroy_with_parent">True</property>
     <property name="type_hint">dialog</property>
     <property name="action">select-folder</property>
     <property name="create_folders">False</property>
+    <signal name="delete-event" handler="hod_dir_selector" swapped="no"/>
     <signal name="file-activated" handler="set_as_dir" swapped="no"/>
     <signal name="selection-changed" handler="change_target" swapped="no"/>
     <child internal-child="vbox">
@@ -43,7 +45,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
-                <signal name="clicked" handler="close_dir_selector" swapped="no"/>
+                <signal name="clicked" handler="hide_dir_selector" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -66,6 +68,7 @@
   </object>
   <object class="GtkWindow" id="MainWindow">
     <property name="can_focus">False</property>
+    <signal name="destroy" handler="quit_program" swapped="no"/>
     <child type="titlebar">
       <placeholder/>
     </child>
