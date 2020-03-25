@@ -10,9 +10,8 @@
     <property name="type_hint">dialog</property>
     <property name="action">select-folder</property>
     <property name="create_folders">False</property>
-    <signal name="delete-event" handler="hod_dir_selector" swapped="no"/>
-    <signal name="file-activated" handler="set_as_dir" swapped="no"/>
-    <signal name="selection-changed" handler="change_target" swapped="no"/>
+    <signal name="current-folder-changed" handler="change_dir" object="ChooserButton" swapped="no"/>
+    <signal name="delete-event" handler="hide_on_delete" swapped="no"/>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can_focus">False</property>
@@ -23,14 +22,13 @@
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="ChooserButton">
                 <property name="label">gtk-open</property>
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
-                <signal name="clicked" handler="set_as_dir" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
