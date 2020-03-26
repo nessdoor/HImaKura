@@ -12,6 +12,7 @@
     <property name="create_folders">False</property>
     <signal name="current-folder-changed" handler="change_dir" object="ChooserButton" swapped="no"/>
     <signal name="delete-event" handler="hide_on_delete" swapped="no"/>
+    <signal name="selection-changed" handler="change_dir" object="ChooserButton" swapped="no"/>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can_focus">False</property>
@@ -29,6 +30,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
+                <signal name="clicked" handler="set_as_dir" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -99,7 +101,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry">
+              <object class="GtkEntry" id="AuthorField">
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
@@ -123,7 +125,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry">
+              <object class="GtkEntry" id="UniverseField">
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
@@ -147,7 +149,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry">
+              <object class="GtkEntry" id="CharactersField">
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
@@ -172,7 +174,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry">
+              <object class="GtkEntry" id="TagsField">
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
@@ -202,7 +204,7 @@
                 <property name="can_focus">False</property>
                 <property name="left_padding">12</property>
                 <child>
-                  <object class="GtkImage">
+                  <object class="GtkImage" id="ImagePanel">
                     <property name="visible">True</property>
                     <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
@@ -277,7 +279,7 @@
             <property name="halign">center</property>
             <property name="spacing">15</property>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="PrevButton">
                 <property name="label">gtk-media-previous</property>
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
@@ -293,7 +295,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="NextButton">
                 <property name="label">gtk-media-next</property>
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
