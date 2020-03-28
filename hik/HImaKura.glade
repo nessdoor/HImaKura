@@ -68,6 +68,7 @@
   </object>
   <object class="GtkWindow" id="MainWindow">
     <property name="can_focus">False</property>
+    <property name="window_position">center</property>
     <signal name="destroy" handler="quit_program" swapped="no"/>
     <child type="titlebar">
       <placeholder/>
@@ -76,14 +77,14 @@
       <object class="GtkGrid">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
         <property name="margin_left">12</property>
         <property name="margin_right">5</property>
+        <property name="margin_top">5</property>
+        <property name="margin_bottom">10</property>
         <property name="row_spacing">12</property>
         <property name="column_spacing">12</property>
         <child>
-          <object class="GtkBox">
+          <object class="GtkBox" id="MetadataBox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="orientation">vertical</property>
@@ -105,6 +106,8 @@
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
+                <property name="hexpand">True</property>
+                <property name="width_chars">30</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -129,6 +132,8 @@
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
+                <property name="hexpand">True</property>
+                <property name="width_chars">30</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -153,6 +158,8 @@
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
+                <property name="hexpand">True</property>
+                <property name="width_chars">30</property>
                 <property name="placeholder_text" translatable="yes">Comma separated list of characters...</property>
               </object>
               <packing>
@@ -178,6 +185,8 @@
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
+                <property name="hexpand">True</property>
+                <property name="width_chars">30</property>
                 <property name="placeholder_text" translatable="yes">Comma separated list of tags...</property>
               </object>
               <packing>
@@ -193,42 +202,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkFrame">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="label_xalign">0</property>
-            <property name="shadow_type">none</property>
-            <child>
-              <object class="GtkAlignment">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="left_padding">12</property>
-                <child>
-                  <object class="GtkImage" id="ImagePanel">
-                    <property name="visible">True</property>
-                    <property name="sensitive">False</property>
-                    <property name="can_focus">False</property>
-                    <property name="stock">gtk-missing-image</property>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child type="label">
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Current image</property>
-              </object>
-            </child>
-          </object>
-          <packing>
-            <property name="left_attach">1</property>
-            <property name="top_attach">0</property>
-            <property name="width">2</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkBox">
+          <object class="GtkBox" id="ClearSaveBox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">center</property>
@@ -273,7 +247,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkBox">
+          <object class="GtkBox" id="PreviousNextBox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">center</property>
@@ -317,7 +291,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkBox">
+          <object class="GtkBox" id="OpenQuitBox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">center</property>
@@ -359,7 +333,36 @@
             <property name="top_attach">1</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkScrolledWindow" id="ImageSWindow">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="hexpand">True</property>
+            <property name="vexpand">True</property>
+            <property name="shadow_type">in</property>
+            <signal name="size-allocate" handler="refresh_image" swapped="no"/>
+            <child>
+              <object class="GtkViewport">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkImage" id="ImageSurface">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="stock">gtk-missing-image</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">0</property>
+            <property name="width">2</property>
+          </packing>
+        </child>
       </object>
     </child>
   </object>
+  <object class="GtkWindowGroup"/>
 </interface>

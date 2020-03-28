@@ -1,6 +1,8 @@
 from pathlib import Path
 
 import gi
+gi.require_version('GdkPixbuf', '2.0')
+from gi.repository.GdkPixbuf import InterpType
 
 from view import View
 
@@ -38,11 +40,26 @@ def setup_view(*args):
     refresh_image()
 
 
-def refresh_image():
+def refresh_image(*args):
     global builder
     global view
 
-    builder.get_object("ImagePanel").set_from_pixbuf(view.get_image())
+    if view is not None:
+        panel = builder.get_object("ImageSurface")
+        img_pix = view.get_image()
+        img_width , img_height = img_pix.get_width(), img_pix.get_height()
+        ratio = img_width / img_height
+        view_alloc = builder.get_object("ImageSWindow").get_allocation()
+        view_width, view_height = view_alloc.width, view_alloc.height
+
+        if img_width > view_width:
+            img_width = view_width
+            img_height = (1 / ratio) * view_width
+        if img_height > view_height:
+            img_height = view_height
+            img_width = ratio * view_height
+
+        panel.set_from_pixbuf(img_pix.scale_simple(img_width, img_height, InterpType.BILINEAR))
 
 
 def show_previous_image(*args):
@@ -73,6 +90,7 @@ signal_mapping = {'show_dir_selector': lambda *args: dir_selector.show_all(),
                   'set_as_dir': setup_view,
                   'show_previous_image': show_previous_image,
                   'show_next_image': show_next_image,
+                  'refresh_image': refresh_image,
                   'hide_on_delete': lambda *args: args[0].hide_on_delete(),
                   'quit_program': lambda *args: Gtk.main_quit()}
 
