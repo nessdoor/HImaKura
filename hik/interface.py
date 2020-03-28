@@ -49,7 +49,7 @@ def refresh_image(*args):
         img_pix = view.get_image()
         img_width , img_height = img_pix.get_width(), img_pix.get_height()
         ratio = img_width / img_height
-        view_alloc = builder.get_object("ImageSWindow").get_allocation()
+        view_alloc = builder.get_object("ImagePort").get_allocation()
         view_width, view_height = view_alloc.width, view_alloc.height
 
         if img_width > view_width:

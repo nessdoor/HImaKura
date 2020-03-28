@@ -348,7 +348,7 @@
             <property name="shadow_type">in</property>
             <signal name="size-allocate" handler="refresh_image" swapped="no"/>
             <child>
-              <object class="GtkViewport">
+              <object class="GtkViewport" id="ImagePort">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
