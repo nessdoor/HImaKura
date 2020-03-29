@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import gi
+
 gi.require_version('GdkPixbuf', '2.0')
 from gi.repository.GdkPixbuf import InterpType
 
@@ -35,6 +36,8 @@ def setup_view(*args):
     builder.get_object("UniverseField").set_sensitive(True)
     builder.get_object("CharactersField").set_sensitive(True)
     builder.get_object("TagsField").set_sensitive(True)
+    builder.get_object("SaveButton").set_sensitive(True)
+    builder.get_object("ClearButton").set_sensitive(True)
 
     show_next_image()
 
@@ -46,7 +49,7 @@ def refresh_image(*args):
     if view is not None:
         panel = builder.get_object("ImageSurface")
         img_pix = view.get_image()
-        img_width , img_height = img_pix.get_width(), img_pix.get_height()
+        img_width, img_height = img_pix.get_width(), img_pix.get_height()
         ratio = img_width / img_height
         view_alloc = builder.get_object("ImagePort").get_allocation()
         view_width, view_height = view_alloc.width, view_alloc.height
@@ -96,6 +99,24 @@ def show_next_image(*args):
     load_meta()
 
 
+def clear_fields(*args):
+    builder.get_object("AuthorField").set_text('')
+    builder.get_object("UniverseField").set_text('')
+    builder.get_object("CharactersField").set_text('')
+    builder.get_object("TagsField").get_buffer().set_text('')
+
+
+def save_meta(*args):
+    view.set_author(builder.get_object("AuthorField").get_text())
+    view.set_universe(builder.get_object("UniverseField").get_text())
+    view.set_characters(builder.get_object("CharactersField").get_text())
+
+    tags_buffer = builder.get_object("TagsField").get_buffer()
+    view.set_tags(tags_buffer.get_text(tags_buffer.get_start_iter(), tags_buffer.get_end_iter(), False))
+
+    view.write()
+
+
 signal_mapping = {'show_dir_selector': lambda *args: dir_selector.show_all(),
                   'hide_dir_selector': lambda *args: dir_selector.hide(),
                   'change_dir': change_selected_dir,
@@ -103,6 +124,8 @@ signal_mapping = {'show_dir_selector': lambda *args: dir_selector.show_all(),
                   'show_previous_image': show_previous_image,
                   'show_next_image': show_next_image,
                   'refresh_image': refresh_image,
+                  'clear_fields': clear_fields,
+                  'save_meta': save_meta,
                   'hide_on_delete': lambda *args: args[0].hide_on_delete(),
                   'quit_program': lambda *args: Gtk.main_quit()}
 

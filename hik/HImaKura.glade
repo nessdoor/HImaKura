@@ -214,7 +214,7 @@
             <property name="halign">center</property>
             <property name="spacing">15</property>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="ClearButton">
                 <property name="label">gtk-clear</property>
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
@@ -230,14 +230,14 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="SaveButton">
                 <property name="label">gtk-save</property>
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
-                <signal name="clicked" handler="generate_xml" swapped="no"/>
+                <signal name="clicked" handler="save_meta" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
