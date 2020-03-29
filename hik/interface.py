@@ -35,9 +35,8 @@ def setup_view(*args):
     builder.get_object("UniverseField").set_sensitive(True)
     builder.get_object("CharactersField").set_sensitive(True)
     builder.get_object("TagsField").set_sensitive(True)
-    view.next()
 
-    refresh_image()
+    show_next_image()
 
 
 def refresh_image(*args):
@@ -62,6 +61,17 @@ def refresh_image(*args):
         panel.set_from_pixbuf(img_pix.scale_simple(img_width, img_height, InterpType.BILINEAR))
 
 
+def load_meta():
+    author = view.get_author()
+    builder.get_object("AuthorField").set_text(author if author is not None else '')
+    universe = view.get_universe()
+    builder.get_object("UniverseField").set_text(universe if universe is not None else '')
+    characters = view.get_characters()
+    builder.get_object("CharactersField").set_text(characters if characters is not None else '')
+    tags = view.get_tags()
+    builder.get_object("TagsField").get_buffer().set_text(tags if tags is not None else '')
+
+
 def show_previous_image(*args):
     global view
 
@@ -71,6 +81,7 @@ def show_previous_image(*args):
     except StopIteration:
         builder.get_object("PrevButton").set_sensitive(False)
     refresh_image()
+    load_meta()
 
 
 def show_next_image(*args):
@@ -82,6 +93,7 @@ def show_next_image(*args):
     except StopIteration:
         builder.get_object("NextButton").set_sensitive(False)
     refresh_image()
+    load_meta()
 
 
 signal_mapping = {'show_dir_selector': lambda *args: dir_selector.show_all(),
