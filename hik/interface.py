@@ -19,11 +19,11 @@ selected_dir = None
 view = None
 
 
-def change_selected_dir(button):
+def change_selected_dir(*args):
     global selected_dir
 
     selected_dir = dir_selector.get_filename()
-    button.set_sensitive(True)
+    builder.get_object("ChooserButton").set_sensitive(True)
 
 
 def setup_view(*args):
@@ -119,8 +119,8 @@ def save_meta(*args):
 
 signal_mapping = {'show_dir_selector': lambda *args: dir_selector.show_all(),
                   'hide_dir_selector': lambda *args: dir_selector.hide(),
-                  'change_dir': change_selected_dir,
-                  'set_as_dir': setup_view,
+                  'change_selected_dir': change_selected_dir,
+                  'setup_view': setup_view,
                   'show_previous_image': show_previous_image,
                   'show_next_image': show_next_image,
                   'refresh_image': refresh_image,
