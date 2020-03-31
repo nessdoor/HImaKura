@@ -1,9 +1,6 @@
 from pathlib import Path
 from typing import Optional
 
-import gi
-
-gi.require_version('GdkPixbuf', '2.0')
 from gi.repository.GdkPixbuf import Pixbuf
 
 from common import ImageMetadata
