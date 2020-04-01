@@ -26,7 +26,7 @@ class TestCarouselConstruction(ut.TestCase):
         empty_file.close()
 
     def test_with_images(self):
-        filenames = ["01.png", "01.xml", "03.jpg", "04.pdf"]
+        filenames = ["01.png", "01.xml", "03.jpg", "04.pdf", "foo"]
         fobs = []
         for name in filenames:
             fobs.append(open(Path(self.test_dir.name) / name, 'a'))

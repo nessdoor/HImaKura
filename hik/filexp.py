@@ -45,7 +45,9 @@ class Carousel:
         self._base_path = directory
         # List the directory's contents and filter out any non-image file
         self._image_files = [img for img in directory.iterdir()
-                             if img.is_file() and guess_type(img)[0].partition('/')[0] == 'image']
+                             if img.is_file()
+                             and guess_type(img)[0] is not None
+                             and guess_type(img)[0].partition('/')[0] == 'image']
         # The first step should bring us at position 0
         self._current = -1
 
