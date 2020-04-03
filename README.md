@@ -65,7 +65,6 @@ and the build directory, virtualenv and caches will be gone.
 ## TODO
 ### Backend
 * Make the backend more independent from GTK.
-* Make `has_prev()`/`has_next()` report the true existence of a previous or next element.
 * Implement proper metadata deletion.
 * Handle IO errors while loading images.
 * Restructure the View class.
@@ -74,7 +73,9 @@ and the build directory, virtualenv and caches will be gone.
 ### UI
 * Solve the placement issue of the directory selection dialog.
 * Add error dialogues.
+* Slide-show mode
 
 ### New functionality
 * Image deletion
 * Bulk metadata export
+* Search filter
