@@ -1,6 +1,6 @@
 **Note: this piece of software is still at an early alpha stage, has some low-quality code and undefined behaviours.**
 
-#The Hentai Image Classifier
+# The Hentai Image Classifier
 The Hentai Image Classifier (クラシファイア), in spite of its maybe misguiding name, is a metadata editor with the erotic
 Japanese-style drawings in mind.
 
@@ -10,7 +10,7 @@ It can open a directory, scan it for images and present you a simple interface t
 metadata. This metadata is recorded into XML files name-wise paired with images: if the image is `foo.png`, then its
 accompanying metadata file is called `foo.xml`, and resides under the same directory.
 
-###Metadata format and rationale
+### Metadata format and rationale
 Metadata files comply with the following DTD:
 ```dtd
 <!ELEMENT image (author?,universe?,characters?,tags?)>
@@ -30,8 +30,8 @@ For example, one could implement an ETL pipeline starting with a fully-textual c
 enclosing the result into a suitable root element before feeding everything to an XML processing system (e.g. XML DBMS,
 knowledge system, ...).
 
-##Building and testing
-###Dependencies
+## Building and testing
+### Dependencies
 HImaKura is a [Python 3](https://python.org) application using [GTK 3](https://gtk.org) for the UI, so these are the
 minimum requirements for building and running the program.
 
@@ -40,7 +40,7 @@ dependencies are installed, namely [PEX](https://github.com/pantsbuild/pex) and
 [PyGObject](https://gitlab.gnome.org/GNOME/pygobject). If you plan on running these steps while offline, make sure to
 have such packages at hand.
 
-###Test
+### Test
 `git clone` the repository and then, as customary:
 ```shell script
 cd HImaKura
@@ -48,22 +48,22 @@ make test
 ```
 and a battery of unit tests will be run, and results reported.
 
-###Build
+### Build
 While inside the cloned repo:
 ```shell script
 make build
 ```
 This will create a .pex file under `./build`, which can then be executed as a standalone application.
 
-###Clean up
+### Clean up
 Just run:
 ```shell script
 make clean
 ```
 and the build directory, virtualenv and caches will be gone.
 
-##TODO
-###Backend
+## TODO
+### Backend
 * Make the backend more independent from GTK.
 * Make `has_prev()`/`has_next()` report the true existence of a previous or next element.
 * Implement proper metadata deletion.
@@ -71,10 +71,10 @@ and the build directory, virtualenv and caches will be gone.
 * Restructure the View class.
 * Test more.
 
-###UI
+### UI
 * Solve the placement issue of the directory selection dialog.
 * Add error dialogues.
 
-###New functionality
+### New functionality
 * Image deletion
 * Bulk metadata export
