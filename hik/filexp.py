@@ -59,48 +59,66 @@ class Carousel:
         """
         Tell if the carousel can presently go back to a previous image.
 
-        Be aware that this method does not check if the previous image still exists.
+        If there was an image preceding the current one, but it has been deleted since the instantiation of the object,
+        then invoking this method alters the state of the carousel by removing the non-existent image(s) from the
+        internal record.
         """
 
-        return self._current > 0
+        if self._current > 0:
+            precedent = self._current - 1
+            if not self._image_files[precedent].exists():
+                del self._image_files[precedent]
+                self._current -= precedent
+                return self.has_prev()
+
+            return True
+
+        return False
 
     def prev(self) -> Tuple[Path, Path]:
-        """Get the previous image/metadata pair."""
+        """
+        Get the previous image/metadata pair.
 
-        # The initial index is negative, and we shouldn't go back to it, hence the `<=`.
+        :raise StopIteration: when there is no image preceding the current one
+        """
+
         if not self.has_prev():
             raise StopIteration
 
         self._current -= 1
-        image_path = self._image_files[self._current]
-        if image_path.exists():
-            return image_path, self._get_metadata_path(image_path)
-        else:
-            del self._image_files[self._current]
-            return self.prev()
+        return self._image_files[self._current], self._get_metadata_path(self._image_files[self._current])
 
     def has_next(self) -> bool:
         """
         Tell if the carousel can presently move forward to the next image.
 
-        Be aware that this method does not check if the next image still exists.
+        If there was an image following the current one, but it has been deleted since the instantiation of the object,
+        then invoking this method alters the state of the carousel by removing the non-existent image(s) from the
+        internal record.
         """
 
-        return self._current < len(self._image_files) - 1
+        if self._current < len(self._image_files) - 1:
+            follower = self._current + 1
+            if not self._image_files[follower].exists():
+                del self._image_files[follower]
+                return self.has_next()
+
+            return True
+
+        return False
 
     def next(self) -> Tuple[Path, Path]:
-        """Get the next image/metadata pair."""
+        """
+        Get the next image/metadata pair.
+
+        :raise StopIteration: when there is no image following the current one
+        """
 
         if not self.has_next():
             raise StopIteration
 
-        image_path = self._image_files[self._current + 1]
-        if image_path.exists():
-            self._current += 1
-            return image_path, self._get_metadata_path(image_path)
-        else:
-            del self._image_files[self._current + 1]
-            return self.next()
+        self._current += 1
+        return self._image_files[self._current], self._get_metadata_path(self._image_files[self._current])
 
 
 def load_bundle(img_file: Path, meta_file: Optional[Path]) -> Tuple[Pixbuf, ImageMetadata]:

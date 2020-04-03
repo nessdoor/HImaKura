@@ -69,16 +69,20 @@ class TestCarouselBehaviour(ut.TestCase):
         # This movement must uncover all the images
         full_scan_results = set()
         for _ in range(0, len(expected_tuples)):
+            self.assertTrue(specimen.has_next())
             full_scan_results.add(specimen.next())
 
+        self.assertFalse(specimen.has_next())
         self.assertRaises(StopIteration, lambda: specimen.next())
         self.assertEqual(expected_tuples, full_scan_results)
 
         # Perform reverse iteration until StopIteration
         # This movement must go back to the first item, not returning the current one again
         reverse_scan_results = set()
+        self.assertTrue(specimen.has_prev())
         reverse_scan_results.add(specimen.prev())
 
+        self.assertFalse(specimen.has_prev())
         self.assertRaises(StopIteration, lambda: specimen.prev())
         self.assertTrue(len(reverse_scan_results) > 0)
         self.assertTrue(expected_tuples > reverse_scan_results)
@@ -86,8 +90,10 @@ class TestCarouselBehaviour(ut.TestCase):
         # Perform the movement once again and move forward
         # This movement must move again towards the last item, without returning the current one again
         forward_scan_results = set()
+        self.assertTrue(specimen.has_next())
         forward_scan_results.add(specimen.next())
 
+        self.assertFalse(specimen.has_next())
         self.assertRaises(StopIteration, lambda: specimen.next())
         self.assertTrue(len(forward_scan_results) > 0)
         self.assertTrue(expected_tuples > forward_scan_results)
@@ -113,14 +119,19 @@ class TestCarouselBehaviour(ut.TestCase):
             results.add(specimen.next())
 
         self.assertEqual({(test_dir_path / second, None), (test_dir_path / third, None)}, results)
+        self.assertFalse(specimen.has_next())
         self.assertRaises(StopIteration, lambda: specimen.next())
 
         so.close()
         os.remove(test_dir_path / second)
+        self.assertTrue(specimen.has_prev())
         self.assertEqual((test_dir_path / third, None), specimen.prev())
+        self.assertFalse(specimen.has_prev())
         self.assertRaises(StopIteration, lambda: specimen.prev())
 
         to.close()
         os.remove(test_dir_path / third)
+        self.assertFalse(specimen.has_next())
         self.assertRaises(StopIteration, lambda: specimen.next())
+        self.assertFalse(specimen.has_prev())
         self.assertRaises(StopIteration, lambda: specimen.prev())
