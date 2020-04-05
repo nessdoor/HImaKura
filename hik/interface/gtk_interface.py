@@ -38,7 +38,9 @@ class GtkInterface:
 
     @Handler
     def show_dir_selector(self):
-        self["DirectoryOpener"].show_all()
+        window = self["DirectoryOpener"]
+        window.set_transient_for(self["MainWindow"])
+        window.show_all()
 
     @Handler
     def hide_dir_selector(self):

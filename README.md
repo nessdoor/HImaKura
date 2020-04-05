@@ -71,7 +71,6 @@ and the build directory, virtualenv and caches will be gone.
 * Test more.
 
 ### UI
-* Solve the placement issue of the directory selection dialog.
 * Add error dialogues.
 * Slide-show mode
 
