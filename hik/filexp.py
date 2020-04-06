@@ -5,12 +5,7 @@ from uuid import uuid4
 
 from common import ImageMetadata
 
-import gi
-
 from xmngr import parse_xml, generate_xml
-
-gi.require_version('GdkPixbuf', '2.0')
-from gi.repository.GdkPixbuf import Pixbuf
 
 
 class Carousel:
@@ -121,12 +116,18 @@ class Carousel:
         return self._image_files[self._current], self._get_metadata_path(self._image_files[self._current])
 
 
-def load_bundle(img_file: Path, meta_file: Optional[Path]) -> Tuple[Pixbuf, ImageMetadata]:
-    """Load a pixbuf/metadata tuple from a couple of paths pointing to an image file and its eventual metadata"""
+def load_meta(img_file: Path) -> ImageMetadata:
+    """
+    Load the metadata tuple for a given image file.
 
-    image = Pixbuf.new_from_file(str(img_file))
+    If no metadata file is present, return a blank metadata tuple.
+    :arg img_file: a path pointing to a managed image for which we want to load metadata
+    :return: the associated metadata as a tuple, or a blank metadata tuple
+    """
 
-    if meta_file is not None:
+    meta_file = img_file.parent / (img_file.stem + '.xml')
+
+    if meta_file.exists():
         with meta_file.open() as mf:
             try:
                 metadata = parse_xml(mf.read())
@@ -135,7 +136,7 @@ def load_bundle(img_file: Path, meta_file: Optional[Path]) -> Tuple[Pixbuf, Imag
     else:
         metadata = ImageMetadata(uuid4(), img_file.name, None, None, None, None)
 
-    return image, metadata
+    return metadata
 
 
 def write_meta(metadata: ImageMetadata, dest: Path):

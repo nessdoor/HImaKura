@@ -4,7 +4,7 @@ from typing import Optional
 from gi.repository.GdkPixbuf import Pixbuf
 
 from common import ImageMetadata
-from filexp import Carousel, load_bundle, write_meta
+from filexp import Carousel, write_meta, load_meta
 
 
 class View:
@@ -34,7 +34,8 @@ class View:
         """
 
         self._image_path, self._meta_path = self._carousel.prev()
-        self._current_image, self._current_meta = load_bundle(self._image_path, self._meta_path)
+        self._current_image = Pixbuf.new_from_file(str(self._image_path))
+        self._current_meta = load_meta(self._image_path)
 
     def next(self):
         """Retrieve the next image and its metadata.
@@ -43,7 +44,8 @@ class View:
         """
 
         self._image_path, self._meta_path = self._carousel.next()
-        self._current_image, self._current_meta = load_bundle(self._image_path, self._meta_path)
+        self._current_image = Pixbuf.new_from_file(str(self._image_path))
+        self._current_meta = load_meta(self._image_path)
 
     def get_image(self) -> Pixbuf:
         return self._current_image.copy()
