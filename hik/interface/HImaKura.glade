@@ -191,6 +191,7 @@
                     <property name="halign">baseline</property>
                     <property name="valign">baseline</property>
                     <property name="wrap_mode">word-char</property>
+                    <property name="left_margin">8</property>
                     <property name="input_purpose">alpha</property>
                   </object>
                 </child>
