@@ -59,22 +59,22 @@ class TestCarouselBehaviour(ut.TestCase):
         fobs = []
         for name in filenames:
             fobs.append(open(Path(self.test_dir.name) / name, 'a'))
-        # Valid tuples that should be produced by an iteration over the entire test directory
-        expected_tuples = {(Path(self.test_dir.name) / "01.png", Path(self.test_dir.name) / "01.xml"),
-                           (Path(self.test_dir.name) / "03.jpg", None)}
+        # Valid paths that should be produced by an iteration over the entire test directory
+        expected_paths = {Path(self.test_dir.name) / "01.png",
+                          Path(self.test_dir.name) / "03.jpg"}
 
         specimen = Carousel(Path(self.test_dir.name))
 
         # Perform forward iteration until StopIteration
         # This movement must uncover all the images
         full_scan_results = set()
-        for _ in range(0, len(expected_tuples)):
+        for _ in range(0, len(expected_paths)):
             self.assertTrue(specimen.has_next())
             full_scan_results.add(specimen.next())
 
         self.assertFalse(specimen.has_next())
         self.assertRaises(StopIteration, lambda: specimen.next())
-        self.assertEqual(expected_tuples, full_scan_results)
+        self.assertEqual(expected_paths, full_scan_results)
 
         # Perform reverse iteration until StopIteration
         # This movement must go back to the first item, not returning the current one again
@@ -85,7 +85,7 @@ class TestCarouselBehaviour(ut.TestCase):
         self.assertFalse(specimen.has_prev())
         self.assertRaises(StopIteration, lambda: specimen.prev())
         self.assertTrue(len(reverse_scan_results) > 0)
-        self.assertTrue(expected_tuples > reverse_scan_results)
+        self.assertTrue(expected_paths > reverse_scan_results)
 
         # Perform the movement once again and move forward
         # This movement must move again towards the last item, without returning the current one again
@@ -96,7 +96,7 @@ class TestCarouselBehaviour(ut.TestCase):
         self.assertFalse(specimen.has_next())
         self.assertRaises(StopIteration, lambda: specimen.next())
         self.assertTrue(len(forward_scan_results) > 0)
-        self.assertTrue(expected_tuples > forward_scan_results)
+        self.assertTrue(expected_paths > forward_scan_results)
         self.assertNotEqual(reverse_scan_results, forward_scan_results)
 
         for file in fobs:
@@ -118,14 +118,14 @@ class TestCarouselBehaviour(ut.TestCase):
         for _ in range(0, 2):
             results.add(specimen.next())
 
-        self.assertEqual({(test_dir_path / second, None), (test_dir_path / third, None)}, results)
+        self.assertEqual({test_dir_path / second, test_dir_path / third}, results)
         self.assertFalse(specimen.has_next())
         self.assertRaises(StopIteration, lambda: specimen.next())
 
         so.close()
         os.remove(test_dir_path / second)
         self.assertTrue(specimen.has_prev())
-        self.assertEqual((test_dir_path / third, None), specimen.prev())
+        self.assertEqual(test_dir_path / third, specimen.prev())
         self.assertFalse(specimen.has_prev())
         self.assertRaises(StopIteration, lambda: specimen.prev())
 

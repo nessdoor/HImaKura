@@ -1,10 +1,9 @@
 from mimetypes import guess_type
 from pathlib import Path
-from typing import Tuple, List, Optional
+from typing import List
 from uuid import uuid4
 
 from common import ImageMetadata
-
 from xmngr import parse_xml, generate_xml
 
 
@@ -12,9 +11,8 @@ class Carousel:
     """
     A slider that moves over a collection of (eventually tagged) images contained in a directory.
 
-    By using the two methods `prev()` and `next()`, one can slide over the collection while being provided with
-    `(image path, metadata path)` tuples via return values.
-    If the current image doesn't have a readable accompanying XML metadata file, `None` is returned.
+    By using the two methods `prev()` and `next()`, one can slide over the collection while being provided with new
+    image paths.
     Trying to slide out of the collection's boundaries causes a `StopIteration` exception to be raised.
     """
 
@@ -46,10 +44,6 @@ class Carousel:
         # The first step should bring us at position 0
         self._current = -1
 
-    def _get_metadata_path(self, image: Path) -> Optional[Path]:
-        sibling_xml = self._base_path / (image.stem + '.xml')
-        return sibling_xml if sibling_xml.exists() else None
-
     def has_prev(self) -> bool:
         """
         Tell if the carousel can presently go back to a previous image.
@@ -70,10 +64,11 @@ class Carousel:
 
         return False
 
-    def prev(self) -> Tuple[Path, Path]:
+    def prev(self) -> Path:
         """
-        Get the previous image/metadata pair.
+        Get the previous image.
 
+        :return: a Path pointing to the new current image
         :raise StopIteration: when there is no image preceding the current one
         """
 
@@ -81,7 +76,7 @@ class Carousel:
             raise StopIteration
 
         self._current -= 1
-        return self._image_files[self._current], self._get_metadata_path(self._image_files[self._current])
+        return self._image_files[self._current]
 
     def has_next(self) -> bool:
         """
@@ -102,10 +97,11 @@ class Carousel:
 
         return False
 
-    def next(self) -> Tuple[Path, Path]:
+    def next(self) -> Path:
         """
-        Get the next image/metadata pair.
+        Get the next image.
 
+        :return: a Path pointing to the new current image
         :raise StopIteration: when there is no image following the current one
         """
 
@@ -113,7 +109,11 @@ class Carousel:
             raise StopIteration
 
         self._current += 1
-        return self._image_files[self._current], self._get_metadata_path(self._image_files[self._current])
+        return self._image_files[self._current]
+
+
+def _construct_metadata_path(image_path: Path) -> Path:
+    return image_path.parent / (image_path.stem + '.xml')
 
 
 def load_meta(img_file: Path) -> ImageMetadata:
@@ -125,7 +125,7 @@ def load_meta(img_file: Path) -> ImageMetadata:
     :return: the associated metadata as a tuple, or a blank metadata tuple
     """
 
-    meta_file = img_file.parent / (img_file.stem + '.xml')
+    meta_file = _construct_metadata_path(img_file)
 
     if meta_file.exists():
         with meta_file.open() as mf:
@@ -139,6 +139,14 @@ def load_meta(img_file: Path) -> ImageMetadata:
     return metadata
 
 
-def write_meta(metadata: ImageMetadata, dest: Path):
-    with dest.open('w') as o:
+def write_meta(metadata: ImageMetadata, img_file: Path) -> None:
+    """
+    Write the updated metadata for a given image.
+    
+    :param metadata: the metadata object to be written out
+    :param img_file: the image to which the metadata is associated
+    """
+
+    dst = _construct_metadata_path(img_file)
+    with dst.open('w') as o:
         o.write(generate_xml(*metadata))

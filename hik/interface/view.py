@@ -19,21 +19,20 @@ class View:
     _current_image: Pixbuf
     _image_path: Path
     _current_meta: ImageMetadata
-    _meta_path: Path
 
     def __init__(self, context_dir: Path):
         """Instantiate a new view over the valid contents at the specified path."""
 
         self._carousel = Carousel(context_dir)
 
-    def prev(self):
+    def prev(self) -> None:
         """
         Retrieve the previous image and its metadata.
 
         :raise StopIteration: when the carousel has reached the start of the collection
         """
 
-        self._image_path, self._meta_path = self._carousel.prev()
+        self._image_path = self._carousel.prev()
         self._current_image = Pixbuf.new_from_file(str(self._image_path))
         self._current_meta = load_meta(self._image_path)
 
@@ -43,7 +42,7 @@ class View:
         :raise StopIteration: when the carousel has reached the end of the collection
         """
 
-        self._image_path, self._meta_path = self._carousel.next()
+        self._image_path = self._carousel.next()
         self._current_image = Pixbuf.new_from_file(str(self._image_path))
         self._current_meta = load_meta(self._image_path)
 
@@ -101,7 +100,4 @@ class View:
         :raise OSError
         """
 
-        if self._meta_path is None:
-            write_meta(self._current_meta, self._image_path.parent / (self._image_path.stem + '.xml'))
-        else:
-            write_meta(self._current_meta, self._meta_path)
+        write_meta(self._current_meta, self._image_path)
