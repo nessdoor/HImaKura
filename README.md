@@ -66,7 +66,6 @@ and the build directory, virtualenv and caches will be gone.
 ### Backend
 * Implement proper metadata deletion.
 * Handle IO errors while loading images.
-* Restructure the View class.
 * Test more.
 
 ### UI

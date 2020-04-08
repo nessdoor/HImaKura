@@ -57,9 +57,26 @@ class GtkInterface:
     def setup_view(self):
         """Setup the View object and activate buttons and fields."""
 
+        def _prev_callback(view: View):
+            self.refresh_image(self)
+            self.load_meta()
+
+            self["PrevButton"].set_sensitive(view.has_prev())
+            self["NextButton"].set_sensitive(view.has_next())
+
+        def _next_callback(view: View):
+            self.refresh_image(self)
+            self.load_meta()
+
+            self["PrevButton"].set_sensitive(view.has_prev())
+            self["NextButton"].set_sensitive(view.has_next())
+
         self["DirectoryOpener"].hide()
         self.view = View(Path(self.selected_dir))
-        self["NextButton"].set_sensitive(True)
+        self.view.set_prev_callback(_prev_callback)
+        self.view.set_next_callback(_next_callback)
+        self.view.load_next()
+
         self["AuthorField"].set_sensitive(True)
         self["UniverseField"].set_sensitive(True)
         self["CharactersField"].set_sensitive(True)
@@ -67,15 +84,13 @@ class GtkInterface:
         self["SaveButton"].set_sensitive(True)
         self["ClearButton"].set_sensitive(True)
 
-        self.show_next_image(self)
-
     @Handler
     def refresh_image(self):
         """Reload, resize and refresh the displayed image, taking it from the backing View object."""
 
         if self.view is not None:
             panel = self["ImageSurface"]
-            img_pix = self.view.get_image()
+            img_pix = self.view.get_image_contents()
             img_width, img_height = img_pix.get_width(), img_pix.get_height()
             ratio = img_width / img_height
             # Get the visible area's size
@@ -95,24 +110,16 @@ class GtkInterface:
     @Handler
     def show_previous_image(self):
         try:
-            self.view.prev()
-            self["NextButton"].set_sensitive(True)
+            self.view.load_prev()
         except StopIteration:
             self["PrevButton"].set_sensitive(False)
-
-        self.refresh_image(self)
-        self.load_meta()
 
     @Handler
     def show_next_image(self):
         try:
-            self.view.next()
-            self["PrevButton"].set_sensitive(True)
+            self.view.load_next()
         except StopIteration:
             self["NextButton"].set_sensitive(False)
-
-        self.refresh_image(self)
-        self.load_meta()
 
     @Handler
     def clear_fields(self):
@@ -122,7 +129,7 @@ class GtkInterface:
         self["TagsField"].get_buffer().set_text('')
 
     def load_meta(self):
-        """Display metadata, pre-fillling the fields."""
+        """Display metadata, pre-filling the fields."""
 
         author = self.view.get_author()
         self["AuthorField"].set_text(author if author is not None else '')

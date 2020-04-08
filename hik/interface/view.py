@@ -1,5 +1,6 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Iterable, Callable
+from uuid import UUID
 
 from gi.repository.GdkPixbuf import Pixbuf
 
@@ -9,95 +10,189 @@ from filexp import Carousel, write_meta, load_meta
 
 class View:
     """
-    The class for objects representing the state of the current view.
+    The state of the current view.
 
     It wraps the inner carousel and retrieves images and metadata objects, exposing them to the frontend.
-    The image is exposed as an untouched GDK pixbuf.
+    Images are exposed as unmodified GDK pixbufs.
     """
 
     _carousel: Carousel
     _current_image: Pixbuf
     _image_path: Path
-    _current_meta: ImageMetadata
+    _prev_callback: Optional[Callable]
+    _next_callback: Optional[Callable]
+
+    # Image metadata
+    _id: UUID
+    _filename: str
+    author: Optional[str]
+    universe: Optional[str]
+    characters: Optional[Iterable[str]]
+    tags: Optional[Iterable[str]]
 
     def __init__(self, context_dir: Path):
-        """Instantiate a new view over the valid contents at the specified path."""
+        """
+        Instantiate a new view over the image/metadata file pairs at the specified path.
+
+        The new view will have most of its data uninitialized, since to load them means to start scanning the contents.
+        Therefore, before attempting to retrieve any data, call the `load_next()` method.
+
+        :arg context_dir: path to the directory under which all operations will be performed
+        :raise FileNotFoundError: when the path points to an invalid location
+        :raise NotADirectoryException: when the path point to a file that is not a directory
+        """
 
         self._carousel = Carousel(context_dir)
+        self._prev_callback = None
+        self._next_callback = None
 
-    def prev(self) -> None:
+    def _update_meta(self, meta: ImageMetadata) -> None:
+        self._id = meta.img_id
+        self._filename = meta.filename
+        self.author = meta.author
+        self.universe = meta.universe
+        self.characters = meta.characters
+        self.tags = meta.tags
+
+    def set_prev_callback(self, callback: Callable) -> None:
+        """Set the callback object to call after each `prev` invocation.
+
+        The callable object must accept a single argument representing this View object. Any returned value will be
+        ignored.
+        :arg callback: the callable object to be used as a callback
+        """
+
+        self._prev_callback = callback
+
+    def set_next_callback(self, callback: Callable) -> None:
+        """
+        Set the callback object to call after each `next` invocation.
+
+        The callable object must accept a single argument representing this View object. Any returned value will be
+        ignored.
+        :arg callback: the callable object to be used as a callback
+        """
+
+        self._next_callback = callback
+
+    def has_prev(self) -> bool:
+        """Check whether there is a previous image."""
+
+        return self._carousel.has_prev()
+
+    def has_next(self) -> bool:
+        """Check whether there is a next image."""
+
+        return self._carousel.has_next()
+
+    def load_prev(self) -> None:
         """
         Retrieve the previous image and its metadata.
 
-        :raise StopIteration: when the carousel has reached the start of the collection
+        If a callback function was set, it will be called after having successfully loaded all the data.
+        :raise StopIteration: when the start of the collection has already been reached
         """
 
         self._image_path = self._carousel.prev()
         self._current_image = Pixbuf.new_from_file(str(self._image_path))
-        self._current_meta = load_meta(self._image_path)
+        self._update_meta(load_meta(self._image_path))
 
-    def next(self):
+        if self._prev_callback is not None:
+            self._prev_callback(self)
+
+    def load_next(self) -> None:
         """Retrieve the next image and its metadata.
 
-        :raise StopIteration: when the carousel has reached the end of the collection
+        If a callback function was set, it will be called after having successfully loaded all the data.
+        :raise StopIteration: when the end of the collection has already been reached
         """
 
         self._image_path = self._carousel.next()
         self._current_image = Pixbuf.new_from_file(str(self._image_path))
-        self._current_meta = load_meta(self._image_path)
+        self._update_meta(load_meta(self._image_path))
 
-    def get_image(self) -> Pixbuf:
+        if self._next_callback is not None:
+            self._next_callback(self)
+
+    @property
+    def image_id(self) -> UUID:
+        return self._id
+
+    @property
+    def filename(self) -> str:
+        return self._filename
+
+    def get_image_contents(self) -> Pixbuf:
+        """
+        Return the image as a pixbuf copy.
+
+        :return: a pixbuf containing the image
+        """
+
         return self._current_image.copy()
 
-    def set_author(self, author: str):
-        o = self._current_meta
+    def set_author(self, author: str) -> None:
         if len(author) == 0:
             author = None
 
-        self._current_meta = ImageMetadata(o.img_id, o.filename, author, o.universe, o.characters, o.tags)
+        self.author = author
 
     def get_author(self) -> Optional[str]:
-        return self._current_meta.author
+        return self.author
 
-    def set_universe(self, universe: str):
-        o = self._current_meta
+    def set_universe(self, universe: str) -> None:
         if len(universe) == 0:
             universe = None
 
-        self._current_meta = ImageMetadata(o.img_id, o.filename, o.author, universe, o.characters, o.tags)
+        self.universe = universe
 
     def get_universe(self) -> Optional[str]:
-        return self._current_meta.universe
+        return self.universe
 
-    def set_characters(self, characters: str):
-        o = self._current_meta
+    def set_characters(self, characters: str) -> None:
+        """Take a comma-separated list of characters in input and use it to update the metadata."""
+
         if len(characters) == 0:
             new_chars = None
         else:
             new_chars = characters.split(',')
+            new_chars = [c.strip() for c in new_chars]
 
-        self._current_meta = ImageMetadata(o.img_id, o.filename, o.author, o.universe, new_chars, o.tags)
+        self.characters = new_chars
 
     def get_characters(self) -> Optional[str]:
-        return ', '.join(self._current_meta.characters) if self._current_meta.characters is not None else None
+        """Return the characters in a comma-separated list, or None if no character metadata is present."""
 
-    def set_tags(self, tags: str):
-        o = self._current_meta
+        if self.characters is not None:
+            return ', '.join(self.characters)
+        else:
+            return None
+
+    def set_tags(self, tags: str) -> None:
+        """Take a comma-separated list of tags in input and use it to update the metadata."""
+
         if len(tags) == 0:
             new_tags = None
         else:
             new_tags = tags.split(',')
+            new_tags = [t.strip() for t in new_tags]
 
-        self._current_meta = ImageMetadata(o.img_id, o.filename, o.author, o.universe, o.characters, new_tags)
+        self.tags = new_tags
 
     def get_tags(self) -> Optional[str]:
-        return ', '.join(self._current_meta.tags) if self._current_meta.tags is not None else None
+        """Return the image tags in a comma-separated list, or None if no tag metadata is present."""
 
-    def write(self):
+        if self.tags is not None:
+            return ', '.join(self.tags)
+        else:
+            return None
+
+    def write(self) -> None:
         """
-        Write out the new metadata.
+        Persist the updated metadata.
 
-        :raise OSError
+        :raise OSError: when the metadata file couldn't be opened
         """
 
-        write_meta(self._current_meta, self._image_path)
+        meta_obj = ImageMetadata(self._id, self._filename, self.author, self.universe, self.characters, self.tags)
+        write_meta(meta_obj, self._image_path)
