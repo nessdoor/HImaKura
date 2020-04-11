@@ -110,27 +110,37 @@ class TestCarouselBehaviour(ut.TestCase):
         so = open(test_dir_path / second, 'a')
         third = "third.png"
         to = open(test_dir_path / third, 'a')
+        fourth = "fourth.png"
+        yo = open(test_dir_path / fourth, 'a')
 
         specimen = Carousel(test_dir_path)
         fo.close()
         os.remove(test_dir_path / first)
         results = set()
-        for _ in range(0, 2):
+        # Perform a full scan
+        for _ in range(0, 3):
             results.add(specimen.next())
 
-        self.assertEqual({test_dir_path / second, test_dir_path / third}, results)
+        # 'First' shouldn't be among the results
+        self.assertEqual({test_dir_path / second, test_dir_path / third, test_dir_path / fourth}, results)
         self.assertFalse(specimen.has_next())
         self.assertRaises(StopIteration, lambda: specimen.next())
 
         so.close()
         os.remove(test_dir_path / second)
+        to.close()
+        os.remove(test_dir_path / third)
+
+        # Iteration should now jump straight at the fourth element
         self.assertTrue(specimen.has_prev())
-        self.assertEqual(test_dir_path / third, specimen.prev())
+        self.assertEqual(test_dir_path / fourth, specimen.prev())
         self.assertFalse(specimen.has_prev())
         self.assertRaises(StopIteration, lambda: specimen.prev())
 
-        to.close()
-        os.remove(test_dir_path / third)
+        yo.close()
+        os.remove(test_dir_path / fourth)
+
+        # Carousel should now be stuck
         self.assertFalse(specimen.has_next())
         self.assertRaises(StopIteration, lambda: specimen.next())
         self.assertFalse(specimen.has_prev())
