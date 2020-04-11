@@ -131,6 +131,8 @@ class GtkInterface:
     def load_meta(self):
         """Display metadata, pre-filling the fields."""
 
+        self["IDLabel"].set_label(str(self.view.image_id))
+        self["FileNameLabel"].set_label(self.view.filename)
         author = self.view.get_author()
         self["AuthorField"].set_text(author if author is not None else '')
         universe = self.view.get_universe()
