@@ -121,6 +121,7 @@ def load_meta(img_file: Path) -> ImageMetadata:
     Load the metadata tuple for a given image file.
 
     If no metadata file is present, return a blank metadata tuple.
+
     :arg img_file: a path pointing to a managed image for which we want to load metadata
     :return: the associated metadata as a tuple, or a blank metadata tuple
     """
