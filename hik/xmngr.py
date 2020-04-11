@@ -1,42 +1,33 @@
 import xml.etree.ElementTree as ElTree
-from typing import Iterable, Optional
 from uuid import UUID
 
 from common import ImageMetadata
 
 
-def generate_xml(img_id: UUID,
-                 filename: str,
-                 author: Optional[str] = None,
-                 universe: Optional[str] = None,
-                 characters: Optional[Iterable[str]] = None,
-                 tags: Optional[Iterable[str]] = None) -> str:
-    """Generate a new XML document containing the metadata for a given image.
+def generate_xml(metadata: ImageMetadata) -> str:
+    """
+    Generate a new XML document containing the metadata for a given image.
 
-    :param img_id: a UUID identifying the image
-    :param filename: name of a file containing the described image
-    :param author: the image's author (optional)
-    :param universe: name of the universe to which the characters or scenery belong (optional)
-    :param characters: a list of the characters involved (optional)
-    :param tags: a list of tags associated with the image (optional)
-    :return: the generated XML in Unicode string format"""
+    :arg metadata: an image metadata object
+    :return: the generated XML in Unicode string format
+    """
 
-    new_xml_root = ElTree.Element('image', {'id': str(img_id), 'filename': filename})
+    new_xml_root = ElTree.Element('image', {'id': str(metadata.img_id), 'filename': metadata.filename})
 
-    if author is not None:
-        ElTree.SubElement(new_xml_root, 'author').text = author
+    if metadata.author is not None:
+        ElTree.SubElement(new_xml_root, 'author').text = metadata.author
 
-    if universe is not None:
-        ElTree.SubElement(new_xml_root, 'universe').text = universe
+    if metadata.universe is not None:
+        ElTree.SubElement(new_xml_root, 'universe').text = metadata.universe
 
-    if characters is not None:
+    if metadata.characters is not None:
         section = ElTree.SubElement(new_xml_root, 'characters')
-        for char in characters:
+        for char in metadata.characters:
             ElTree.SubElement(section, 'character').text = char
 
-    if tags is not None:
+    if metadata.tags is not None:
         section = ElTree.SubElement(new_xml_root, 'tags')
-        for tag in tags:
+        for tag in metadata.tags:
             ElTree.SubElement(section, 'tag').text = tag
 
     return ElTree.tostring(new_xml_root, encoding="unicode")

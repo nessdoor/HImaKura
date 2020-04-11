@@ -149,4 +149,4 @@ def write_meta(metadata: ImageMetadata, img_file: Path) -> None:
 
     dst = _construct_metadata_path(img_file)
     with dst.open('w') as o:
-        o.write(generate_xml(*metadata))
+        o.write(generate_xml(metadata))
