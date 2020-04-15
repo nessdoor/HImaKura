@@ -40,6 +40,21 @@ class TestLoadStore(ut.TestCase):
                                        ["f", "a"]),
                          load_meta(Path(self.test_dir.name) / "test.png"))
 
+    def test_parse_error(self):
+        with (Path(self.test_dir.name) / "invalid.xml").open('w') as f:
+            # Write an invalid XML file
+            f.write("<image id=\"kler\" filename=\"kls\">")
+
+        loaded_meta = load_meta(Path(self.test_dir.name) / "invalid.png")
+
+        # Verify that the parse error has been masked as blank metadata
+        self.assertIsNotNone(loaded_meta.img_id)
+        self.assertIsNotNone(loaded_meta.filename)
+        self.assertIsNone(loaded_meta.author)
+        self.assertIsNone(loaded_meta.universe)
+        self.assertIsNone(loaded_meta.characters)
+        self.assertIsNone(loaded_meta.tags)
+
     def test_store(self):
         write_meta(ImageMetadata(UUID('97ed6183-73a0-46ea-b51d-0721b0fbd357'),
                                  "test.png",

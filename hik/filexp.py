@@ -2,6 +2,7 @@ from mimetypes import guess_type
 from pathlib import Path
 from typing import List
 from uuid import uuid4
+from xml.etree.ElementTree import ParseError
 
 from common import ImageMetadata
 from xmngr import parse_xml, generate_xml
@@ -132,7 +133,7 @@ def load_meta(img_file: Path) -> ImageMetadata:
         with meta_file.open() as mf:
             try:
                 metadata = parse_xml(mf.read())
-            except OSError:
+            except (OSError, ParseError):
                 metadata = ImageMetadata(uuid4(), img_file.name, None, None, None, None)
     else:
         metadata = ImageMetadata(uuid4(), img_file.name, None, None, None, None)
