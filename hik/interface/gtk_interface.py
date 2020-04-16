@@ -71,17 +71,22 @@ class GtkInterface:
             self["NextButton"].set_sensitive(view.has_next())
 
         self["DirectoryOpener"].hide()
-        self.view = View(Path(self.selected_dir))
-        self.view.set_prev_callback(_prev_callback)
-        self.view.set_next_callback(_next_callback)
-        self.view.load_next()
+        try:
+            self.view = View(Path(self.selected_dir))
+            self.view.set_prev_callback(_prev_callback)
+            self.view.set_next_callback(_next_callback)
+            self.view.load_next()
 
-        self["AuthorField"].set_sensitive(True)
-        self["UniverseField"].set_sensitive(True)
-        self["CharactersField"].set_sensitive(True)
-        self["TagsField"].set_sensitive(True)
-        self["SaveButton"].set_sensitive(True)
-        self["ClearButton"].set_sensitive(True)
+            self["AuthorField"].set_sensitive(True)
+            self["UniverseField"].set_sensitive(True)
+            self["CharactersField"].set_sensitive(True)
+            self["TagsField"].set_sensitive(True)
+            self["SaveButton"].set_sensitive(True)
+            self["ClearButton"].set_sensitive(True)
+        except OSError as ose:
+            # Error popup
+            self["ErrorDialog"].set_markup("Error opening " + self.selected_dir + ": " + str(ose))
+            self["ErrorDialog"].show_all()
 
     @Handler
     def refresh_image(self):

@@ -31,10 +31,10 @@ class Carousel:
         """
 
         if not directory.exists():
-            raise FileNotFoundError
+            raise FileNotFoundError("Directory not found or inaccessible.")
 
         if not directory.is_dir():
-            raise NotADirectoryError
+            raise NotADirectoryError("Not a directory.")
 
         self._base_path = directory
         # List the directory's contents and filter out any non-image file
