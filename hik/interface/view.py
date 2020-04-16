@@ -75,6 +75,11 @@ class View:
 
         self._next_callback = callback
 
+    def has_image_data(self) -> bool:
+        """Tell if the current view contains valid image data."""
+
+        return hasattr(self, '_current_image')
+
     def has_prev(self) -> bool:
         """Check whether there is a previous image."""
 
@@ -122,14 +127,17 @@ class View:
     def filename(self) -> str:
         return self._filename
 
-    def get_image_contents(self) -> Pixbuf:
+    def get_image_contents(self) -> Optional[Pixbuf]:
         """
         Return the image as a pixbuf copy.
 
-        :return: a pixbuf containing the image
+        :return: a pixbuf containing the image, or None if no image has been loaded
         """
 
-        return self._current_image.copy()
+        if self.has_image_data():
+            return self._current_image.copy()
+        else:
+            return None
 
     def set_author(self, author: str) -> None:
         if len(author) == 0:

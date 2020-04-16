@@ -95,7 +95,7 @@ class GtkInterface:
     def refresh_image(self):
         """Reload, resize and refresh the displayed image, taking it from the backing View object."""
 
-        if self.view is not None:
+        if self.view is not None and self.view.has_image_data():
             panel = self["ImageSurface"]
             img_pix = self.view.get_image_contents()
             img_width, img_height = img_pix.get_width(), img_pix.get_height()
