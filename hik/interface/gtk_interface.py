@@ -105,17 +105,15 @@ class GtkInterface:
             panel = self["ImageSurface"]
             img_pix = self.view.get_image_contents()
             img_width, img_height = img_pix.get_width(), img_pix.get_height()
-            ratio = img_width / img_height
             # Get the visible area's size
             view_alloc = self["ImagePort"].get_allocation()
             view_width, view_height = view_alloc.width, view_alloc.height
 
-            if img_width > view_width:
-                img_width = view_width
-                img_height = (1 / ratio) * view_width
-            if img_height > view_height:
-                img_height = view_height
-                img_width = ratio * view_height
+            # If the visible area is smaller than the image, calculate the scaling factor and set the new image sizes
+            # (Thanks to https://stackoverflow.com/a/1106367/13140497 for leading me down the right path)
+            if img_width > view_width or img_height > view_height:
+                s_fact = min(view_width / img_width, view_height / img_height)
+                img_width, img_height = img_width * s_fact, img_height * s_fact
 
             # Load and resize the image
             panel.set_from_pixbuf(img_pix.scale_simple(img_width, img_height, InterpType.BILINEAR))
