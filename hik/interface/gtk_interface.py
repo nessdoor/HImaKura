@@ -174,7 +174,11 @@ class GtkInterface:
         tags_buffer = self["TagsField"].get_buffer()
         self.view.set_tags(tags_buffer.get_text(tags_buffer.get_start_iter(), tags_buffer.get_end_iter(), False))
 
-        self.view.write()
+        try:
+            self.view.write()
+        except OSError as ose:
+            self["ErrorDialog"].set_markup("Error while saving metadata: " + str(ose))
+            self["ErrorDialog"].show_all()
 
     def _wrap_handler(self, c: Callable):
         return lambda *args: c(self)
