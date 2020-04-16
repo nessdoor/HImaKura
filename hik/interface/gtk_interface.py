@@ -4,7 +4,7 @@ from inspect import getmembers
 from pathlib import Path
 from typing import Callable, Optional
 
-from gi.repository import Gtk
+from gi.repository import Gtk, GLib
 from gi.repository.GdkPixbuf import InterpType
 
 from interface.view import View
@@ -90,6 +90,12 @@ class GtkInterface:
             # Show error popup
             self["ErrorDialog"].set_markup("Error opening " + self.selected_dir + ": " + str(ose))
             self["ErrorDialog"].show_all()
+        except GLib.Error as ge:
+            # Invalid data on first image
+            self["ErrorDialog"].set_markup("Error while loading first image: " + ge.message)
+            self["ErrorDialog"].show_all()
+            # Optimistically enable forward-iteration
+            self["NextButton"].set_sensitive(True)
 
     @Handler
     def refresh_image(self):
@@ -119,14 +125,24 @@ class GtkInterface:
         try:
             self.view.load_prev()
         except StopIteration:
+            # In case something goes wrong with the iteration, disable further movement in this direction
             self["PrevButton"].set_sensitive(False)
+        except GLib.Error as ge:
+            # Invalid image data
+            self["ErrorDialog"].set_markup("Error while loading previous image: " + ge.message)
+            self["ErrorDialog"].show_all()
 
     @Handler
     def show_next_image(self):
         try:
             self.view.load_next()
         except StopIteration:
+            # In case something goes wrong with the iteration, disable further movement in this direction
             self["NextButton"].set_sensitive(False)
+        except GLib.Error as ge:
+            # Invalid image data
+            self["ErrorDialog"].set_markup("Error while loading next image: " + ge.message)
+            self["ErrorDialog"].show_all()
 
     @Handler
     def clear_fields(self):

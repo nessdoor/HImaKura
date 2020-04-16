@@ -65,11 +65,9 @@ and the build directory, virtualenv and caches will be gone.
 ## TODO
 ### Backend
 * Implement proper metadata deletion.
-* Handle IO errors while loading images.
 * Test more.
 
 ### UI
-* Add error dialogues.
 * Slide-show mode
 
 ### New functionality
