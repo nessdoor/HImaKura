@@ -22,6 +22,19 @@ class TestView(TestCase):
     def tearDown(self) -> None:
         self.test_dir.cleanup()
 
+    def test_uninitialized_behaviour(self):
+        specimen = View(Path(self.test_dir.name))
+
+        # Verify that absence of loaded data is properly reported
+        self.assertFalse(specimen.has_image_data())
+        self.assertIsNone(specimen.get_image_contents())
+
+        specimen.load_next()
+
+        # Verify that image data is now there
+        self.assertTrue(specimen.has_image_data())
+        self.assertIsNotNone(specimen.get_image_contents())
+
     def test_carousel_behaviour(self):
         specimen = View(Path(self.test_dir.name))
 
