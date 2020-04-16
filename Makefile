@@ -34,6 +34,7 @@ test: venv
 venv: requirements.txt
 	@echo "Creating the virtualenv..."
 	python -m venv $(VENV)
+	$(PYTHON) -m pip install --upgrade pip
 	$(PYTHON) -m pip install pex
 	$(PYTHON) -m pip install -r requirements.txt
 	@echo "Done."
