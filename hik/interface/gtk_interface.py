@@ -1,4 +1,3 @@
-from functools import update_wrapper
 from importlib import resources
 from inspect import getmembers
 from pathlib import Path
@@ -8,6 +7,13 @@ from gi.repository import Gtk, GLib
 from gi.repository.GdkPixbuf import InterpType
 
 from interface.view import View
+
+
+def signal_handler(h: Callable):
+    """Mark function as a signal handler."""
+
+    h._signal_handler = True
+    return h
 
 
 class GtkInterface:
@@ -22,49 +28,39 @@ class GtkInterface:
     instance = None
     interface_markup = resources.read_text('interface', 'HImaKura.glade')
 
-    class Handler:
-        """Decorator for registering methods as signal handlers."""
-
-        def __init__(self, h: Callable):
-            update_wrapper(self, h)
-            self.local_handler = h
-
-        def __call__(self, *args, **kwargs):
-            return self.local_handler(*args, **kwargs)
-
     _builder: Gtk.Builder
     selected_dir: Optional[str]
     view: Optional[View]
 
-    @Handler
-    def show_dir_selector(self):
+    @signal_handler
+    def show_dir_selector(self, *args):
         window = self["DirectoryOpener"]
         window.show_all()
 
-    @Handler
-    def hide_dir_selector(self):
+    @signal_handler
+    def hide_dir_selector(self, *args):
         self["DirectoryOpener"].hide()
 
-    @Handler
-    def change_selected_dir(self):
+    @signal_handler
+    def change_selected_dir(self, *args):
         """Alter the currently selected directory."""
 
         self.selected_dir = self["DirectoryOpener"].get_filename()
         self["ChooserButton"].set_sensitive(True)
 
-    @Handler
-    def setup_view(self):
+    @signal_handler
+    def setup_view(self, *args):
         """Setup the View object and activate buttons and fields."""
 
         def _prev_callback(view: View):
-            self.refresh_image(self)
+            self.refresh_image()
             self.load_meta()
 
             self["PrevButton"].set_sensitive(view.has_prev())
             self["NextButton"].set_sensitive(view.has_next())
 
         def _next_callback(view: View):
-            self.refresh_image(self)
+            self.refresh_image()
             self.load_meta()
 
             self["PrevButton"].set_sensitive(view.has_prev())
@@ -101,8 +97,8 @@ class GtkInterface:
             # Optimistically enable forward-iteration
             self["NextButton"].set_sensitive(True)
 
-    @Handler
-    def refresh_image(self):
+    @signal_handler
+    def refresh_image(self, *args):
         """Reload, resize and refresh the displayed image, taking it from the backing View object."""
 
         if self.view is not None and self.view.has_image_data():
@@ -122,8 +118,8 @@ class GtkInterface:
             # Load and resize the image
             panel.set_from_pixbuf(img_pix.scale_simple(img_width, img_height, InterpType.BILINEAR))
 
-    @Handler
-    def show_previous_image(self):
+    @signal_handler
+    def show_previous_image(self, *args):
         try:
             self.view.load_prev()
         except StopIteration:
@@ -136,8 +132,8 @@ class GtkInterface:
             error_dialog.format_secondary_text(ge.message)
             error_dialog.show_all()
 
-    @Handler
-    def show_next_image(self):
+    @signal_handler
+    def show_next_image(self, *args):
         try:
             self.view.load_next()
         except StopIteration:
@@ -150,8 +146,8 @@ class GtkInterface:
             error_dialog.format_secondary_text(ge.message)
             error_dialog.show_all()
 
-    @Handler
-    def clear_fields(self):
+    @signal_handler
+    def clear_fields(self, *args):
         self["AuthorField"].set_text('')
         self["UniverseField"].set_text('')
         self["CharactersField"].set_text('')
@@ -171,8 +167,8 @@ class GtkInterface:
         tags = self.view.get_tags()
         self["TagsField"].get_buffer().set_text(tags if tags is not None else '')
 
-    @Handler
-    def save_meta(self):
+    @signal_handler
+    def save_meta(self, *args):
         """Overwrite the image's metadata with the field's contents."""
 
         self.view.set_author(self["AuthorField"].get_text())
@@ -190,9 +186,6 @@ class GtkInterface:
             error_dialog.format_secondary_text(str(ose))
             error_dialog.show_all()
 
-    def _wrap_handler(self, c: Callable):
-        return lambda *args: c(self)
-
     def launch(self):
         """Show the main window and start the GTK thread."""
 
@@ -206,8 +199,8 @@ class GtkInterface:
             new_instance = object.__new__(cls)
             signal_mapping = dict()
             # Register the signal handlers
-            for name, func in getmembers(new_instance, lambda m: isinstance(m, cls.Handler)):
-                signal_mapping[name] = new_instance._wrap_handler(func)
+            for name, meth in getmembers(new_instance, lambda m: hasattr(m, '_signal_handler') and m._signal_handler):
+                signal_mapping[name] = meth
 
             # Special handler for GTK's hide-on-delete
             signal_mapping["hide_on_delete"] = lambda *args: args[0].hide_on_delete()
