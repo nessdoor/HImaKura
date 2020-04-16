@@ -88,12 +88,16 @@ class GtkInterface:
                 self["ClearButton"].set_sensitive(True)
         except OSError as ose:
             # Show error popup
-            self["ErrorDialog"].set_markup("Error opening " + self.selected_dir + ": " + str(ose))
-            self["ErrorDialog"].show_all()
+            error_dialog = self["ErrorDialog"]
+            error_dialog.set_markup("<b>Error opening " + self.selected_dir + "</b>")
+            error_dialog.format_secondary_text(str(ose))
+            error_dialog.show_all()
         except GLib.Error as ge:
             # Invalid data on first image
-            self["ErrorDialog"].set_markup("Error while loading first image: " + ge.message)
-            self["ErrorDialog"].show_all()
+            error_dialog = self["ErrorDialog"]
+            error_dialog.set_markup("<b>Error while loading first image</b>")
+            error_dialog.format_secondary_text(ge.message)
+            error_dialog.show_all()
             # Optimistically enable forward-iteration
             self["NextButton"].set_sensitive(True)
 
@@ -127,8 +131,10 @@ class GtkInterface:
             self["PrevButton"].set_sensitive(False)
         except GLib.Error as ge:
             # Invalid image data
-            self["ErrorDialog"].set_markup("Error while loading previous image: " + ge.message)
-            self["ErrorDialog"].show_all()
+            error_dialog = self["ErrorDialog"]
+            error_dialog.set_markup("<b>Error while loading previous image</b>")
+            error_dialog.format_secondary_text(ge.message)
+            error_dialog.show_all()
 
     @Handler
     def show_next_image(self):
@@ -139,8 +145,10 @@ class GtkInterface:
             self["NextButton"].set_sensitive(False)
         except GLib.Error as ge:
             # Invalid image data
-            self["ErrorDialog"].set_markup("Error while loading next image: " + ge.message)
-            self["ErrorDialog"].show_all()
+            error_dialog = self["ErrorDialog"]
+            error_dialog.set_markup("<b>Error while loading next image</b>")
+            error_dialog.format_secondary_text(ge.message)
+            error_dialog.show_all()
 
     @Handler
     def clear_fields(self):
@@ -177,8 +185,10 @@ class GtkInterface:
         try:
             self.view.write()
         except OSError as ose:
-            self["ErrorDialog"].set_markup("Error while saving metadata: " + str(ose))
-            self["ErrorDialog"].show_all()
+            error_dialog = self["ErrorDialog"]
+            error_dialog.set_markup("<b>Error while saving metadata</b>")
+            error_dialog.format_secondary_text(str(ose))
+            error_dialog.show_all()
 
     def _wrap_handler(self, c: Callable):
         return lambda *args: c(self)
