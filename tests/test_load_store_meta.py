@@ -55,6 +55,20 @@ class TestLoadStore(ut.TestCase):
         self.assertIsNone(loaded_meta.characters)
         self.assertIsNone(loaded_meta.tags)
 
+    def test_read_error(self):
+        # Create an unreadable file
+        (Path(self.test_dir.name) / 'inaccessible.xml').touch(mode=0o0222)
+
+        loaded_meta = load_meta(Path(self.test_dir.name) / "inaccessible.png")
+
+        # Verify that the IO error has been masked as blank metadata
+        self.assertIsNotNone(loaded_meta.img_id)
+        self.assertIsNotNone(loaded_meta.filename)
+        self.assertIsNone(loaded_meta.author)
+        self.assertIsNone(loaded_meta.universe)
+        self.assertIsNone(loaded_meta.characters)
+        self.assertIsNone(loaded_meta.tags)
+
     def test_store(self):
         write_meta(ImageMetadata(UUID('97ed6183-73a0-46ea-b51d-0721b0fbd357'),
                                  "test.png",

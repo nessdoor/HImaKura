@@ -121,7 +121,7 @@ def load_meta(img_file: Path) -> ImageMetadata:
     """
     Load the metadata tuple for a given image file.
 
-    If no metadata file is present, return a blank metadata tuple.
+    If no metadata file is present, or it is currently inaccessible, return a blank metadata tuple.
 
     :arg img_file: a path pointing to a managed image for which we want to load metadata
     :return: the associated metadata as a tuple, or a blank metadata tuple
@@ -130,11 +130,11 @@ def load_meta(img_file: Path) -> ImageMetadata:
     meta_file = _construct_metadata_path(img_file)
 
     if meta_file.exists():
-        with meta_file.open() as mf:
-            try:
+        try:
+            with meta_file.open() as mf:
                 metadata = parse_xml(mf.read())
-            except (OSError, ParseError):
-                metadata = ImageMetadata(uuid4(), img_file.name, None, None, None, None)
+        except (OSError, ParseError):
+            metadata = ImageMetadata(uuid4(), img_file.name, None, None, None, None)
     else:
         metadata = ImageMetadata(uuid4(), img_file.name, None, None, None, None)
 
