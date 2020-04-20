@@ -1,6 +1,6 @@
 from mimetypes import guess_type
 from pathlib import Path
-from typing import List
+from typing import List, Callable
 from uuid import uuid4
 from xml.etree.ElementTree import ParseError
 
@@ -17,15 +17,20 @@ class Carousel:
     Trying to slide out of the collection's boundaries causes a `StopIteration` exception to be raised.
     """
 
-    _base_path: Path
     _image_files: List[Path]
     _current: int
 
-    def __init__(self, directory: Path):
+    def __init__(self, directory: Path, image_filter: Callable[[Path], bool] = lambda _: True):
         """
         Instantiates a new slider over the collection of images under the given path.
 
+        Optionally, a filter function can be provided to make the carousel more selective over which images it must
+        iterate. The function will be called by passing the image's path as the sole argument and must return a boolean
+        value. Only images for which the filter function returns `True` will be contemplated. Any exception will
+        propagate upwards freely.
+
         :param directory: a directory path under which the slider will look-up images
+        :param image_filter: a callable to be used for filtering explored images
         :raise FileNotFoundError: when no directory exists at the specified path
         :raise NotADirectoryException: when the provided path points to a file that is not a directory
         """
@@ -36,12 +41,12 @@ class Carousel:
         if not directory.is_dir():
             raise NotADirectoryError("Not a directory.")
 
-        self._base_path = directory
         # List the directory's contents and filter out any non-image file
         self._image_files = [img for img in directory.iterdir()
                              if img.is_file()
                              and guess_type(img)[0] is not None
-                             and guess_type(img)[0].partition('/')[0] == 'image']
+                             and guess_type(img)[0].partition('/')[0] == 'image'
+                             and image_filter(img)]
         # The first step should bring us at position 0
         self._current = -1
 

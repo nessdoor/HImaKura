@@ -27,18 +27,22 @@ class TestCarouselConstruction(ut.TestCase):
 
     def test_with_images(self):
         filenames = ["01.png", "01.xml", "03.jpg", "04.pdf", "foo"]
-        fobs = []
         for name in filenames:
-            fobs.append(open(Path(self.test_dir.name) / name, 'a'))
+            (Path(self.test_dir.name) / name).touch()
 
         specimen = Carousel(Path(self.test_dir.name))
-        # Verify the correctness of the base path
-        self.assertEqual(Path(self.test_dir.name), specimen._base_path)
+
         # Verify that the image files have been picked-up by the object
         self.assertEqual({"01.png", "03.jpg"}, set(map(lambda p: p.name, specimen._image_files)))
 
-        for file in fobs:
-            file.close()
+    def test_filter(self):
+        filenames = ["included.png", "excluded.jpg"]
+        for name in filenames:
+            (Path(self.test_dir.name) / name).touch()
+
+        specimen = Carousel(Path(self.test_dir.name), lambda path: path.stem == 'included')
+
+        self.assertEqual([Path(self.test_dir.name) / "included.png"], specimen._image_files)
 
 
 class TestCarouselBehaviour(ut.TestCase):
