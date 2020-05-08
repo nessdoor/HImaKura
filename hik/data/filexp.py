@@ -1,6 +1,6 @@
 from mimetypes import guess_type
 from pathlib import Path
-from typing import List, Callable
+from typing import List, Callable, Iterable
 from uuid import uuid4
 from xml.etree.ElementTree import ParseError
 
@@ -20,17 +20,17 @@ class Carousel:
     _image_files: List[Path]
     _current: int
 
-    def __init__(self, directory: Path, image_filter: Callable[[Path], bool] = lambda _: True):
+    def __init__(self, directory: Path, metadata_filters: Iterable[Callable[[ImageMetadata], bool]] = ()):
         """
         Instantiates a new slider over the collection of images under the given path.
 
-        Optionally, a filter function can be provided to make the carousel more selective over which images it must
-        iterate. The function will be called by passing the image's path as the sole argument and must return a boolean
-        value. Only images for which the filter function returns `True` will be contemplated. Any exception will
-        propagate upwards freely.
+        Optionally, a collection of filter functions can be provided to make the carousel more selective over which
+        images it must iterate on. Each function will be called by passing the image's metadata object as the sole
+        argument and must return a boolean value. Only images for which all the filter functions return `True` will be
+        contemplated. Any exception will propagate upwards freely.
 
         :param directory: a directory path under which the slider will look-up images
-        :param image_filter: a callable to be used for filtering explored images
+        :param metadata_filters: an iterable of callables to be used for filtering explored images
         :raise FileNotFoundError: when no directory exists at the specified path
         :raise NotADirectoryException: when the provided path points to a file that is not a directory
         """
@@ -41,12 +41,22 @@ class Carousel:
         if not directory.is_dir():
             raise NotADirectoryError("Not a directory.")
 
-        # List the directory's contents and filter out any non-image file
-        self._image_files = [img for img in directory.iterdir()
-                             if img.is_file()
-                             and guess_type(img)[0] is not None
-                             and guess_type(img)[0].partition('/')[0] == 'image'
-                             and image_filter(img)]
+        # Reify the filter collection
+        metadata_filters = list(metadata_filters)
+
+        # Apply filtering to a file path
+        def apply_filters(p: Path) -> bool:
+            if p.is_file() and (guess_type(p)[0] is not None) and (guess_type(p)[0].partition('/')[0] == 'image'):
+                if len(metadata_filters) > 0:
+                    metadata = load_meta(p)
+                    return all(map(lambda f: f(metadata), metadata_filters))
+                else:
+                    return True
+
+            return False
+
+        # List the directory's contents and apply filters
+        self._image_files = [img for img in directory.iterdir() if apply_filters(img)]
         # The first step should bring us at position 0
         self._current = -1
 

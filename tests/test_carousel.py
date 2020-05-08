@@ -2,8 +2,10 @@ import os
 import unittest as ut
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from uuid import uuid4
 
-from data.filexp import Carousel
+from data.common import ImageMetadata
+from data.filexp import Carousel, write_meta
 
 
 class TestCarouselConstruction(ut.TestCase):
@@ -36,11 +38,14 @@ class TestCarouselConstruction(ut.TestCase):
         self.assertEqual({"01.png", "03.jpg"}, set(map(lambda p: p.name, specimen._image_files)))
 
     def test_filter(self):
-        filenames = ["included.png", "excluded.jpg"]
-        for name in filenames:
-            (Path(self.test_dir.name) / name).touch()
+        filenames_meta = [("included.png", "included"), ("excluded.jpg", "excluded")]
+        for name, meta in filenames_meta:
+            img_path = (Path(self.test_dir.name) / name)
+            img_path.touch()
+            # Use the author field as the filtering target
+            write_meta(ImageMetadata(uuid4(), name, meta, None, None, None), img_path)
 
-        specimen = Carousel(Path(self.test_dir.name), lambda path: path.stem == 'included')
+        specimen = Carousel(Path(self.test_dir.name), [lambda meta: meta.author == "included"])
 
         self.assertEqual([Path(self.test_dir.name) / "included.png"], specimen._image_files)
 
