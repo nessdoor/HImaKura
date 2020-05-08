@@ -4,8 +4,8 @@ from uuid import UUID
 
 from gi.repository.GdkPixbuf import Pixbuf
 
-from common import ImageMetadata
-from filexp import Carousel, write_meta, load_meta
+from data.common import ImageMetadata
+from data.filexp import Carousel, write_meta, load_meta
 
 
 class View:

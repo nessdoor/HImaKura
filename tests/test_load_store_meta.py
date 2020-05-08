@@ -3,8 +3,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from uuid import UUID
 
-from common import ImageMetadata
-from filexp import load_meta, write_meta
+from data.common import ImageMetadata
+from data.filexp import load_meta, write_meta
 
 
 class TestLoadStore(ut.TestCase):

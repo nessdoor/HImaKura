@@ -1,8 +1,8 @@
 import unittest as ut
 import uuid
 
-from common import ImageMetadata
-import hik.xmngr as xm
+from data.common import ImageMetadata
+import data.xmngr as xm
 
 
 class TestXMLCreation(ut.TestCase):

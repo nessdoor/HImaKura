@@ -4,8 +4,8 @@ from typing import List, Callable
 from uuid import uuid4
 from xml.etree.ElementTree import ParseError
 
-from common import ImageMetadata
-from xmngr import parse_xml, generate_xml
+from data.common import ImageMetadata
+from data.xmngr import parse_xml, generate_xml
 
 
 class Carousel:

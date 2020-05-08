@@ -3,7 +3,7 @@ import unittest as ut
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from filexp import Carousel
+from data.filexp import Carousel
 
 
 class TestCarouselConstruction(ut.TestCase):

@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ElTree
 from uuid import UUID
 
-from common import ImageMetadata
+from data.common import ImageMetadata
 
 
 def generate_xml(metadata: ImageMetadata) -> str:

@@ -4,8 +4,8 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from uuid import UUID
 
-from common import ImageMetadata
-from filexp import write_meta, load_meta
+from data.common import ImageMetadata
+from data.filexp import write_meta, load_meta
 from interface.view import View
 
 
