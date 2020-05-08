@@ -1,5 +1,3 @@
-**Note: this piece of software is still at an early alpha stage, has some low-quality code and undefined behaviours.**
-
 # The Hentai Image Classifier
 The Hentai Image Classifier (クラシファイア), in spite of its maybe misguiding name, is a metadata editor with the erotic
 Japanese-style drawings in mind.
@@ -32,13 +30,14 @@ knowledge system, ...).
 
 ## Building and testing
 ### Dependencies
-HImaKura is a [Python 3](https://python.org) application using [GTK 3](https://gtk.org) for the UI, so these are the
-minimum requirements for building and running the program.
+HImaKura is a [Python 3](https://python.org) application using [GTK 3](https://gtk.org) for the UI and
+[PyGObject](https://pygobject.readthedocs.io) as a language binding for GTK, so these (and their native runtime
+dependencies) are the minimum requirements for running the program.
 
-Build and test steps employ a dedicated [virtualenv](https://docs.python.org/3/tutorial/venv.html) in which all ulterior
-dependencies are installed, namely [PEX](https://github.com/pantsbuild/pex) and
-[PyGObject](https://gitlab.gnome.org/GNOME/pygobject). If you plan on running these steps while offline, make sure to
-have such packages at hand.
+Build and test steps employ a dedicated [virtualenv](https://docs.python.org/3/tutorial/venv.html) in which all Python
+dependencies are installed. [PEX](https://github.com/pantsbuild/pex) is used for packaging the final application. If
+you plan on running these steps while offline, make sure to have these packages in your local cache, or instantiate the
+virtualenv beforehand.
 
 ### Test
 `git clone` the repository and then, as customary:
@@ -64,7 +63,7 @@ and the build directory, virtualenv and caches will be gone.
 
 ## TODO
 ### Backend
-* Implement proper metadata deletion.
+* Implement proper metadata deletion
 * Test more.
 
 ### UI
