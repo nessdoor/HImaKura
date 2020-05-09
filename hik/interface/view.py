@@ -1,3 +1,4 @@
+import stringprep
 from pathlib import Path
 from typing import Optional, Iterable, Callable
 from uuid import UUID
@@ -6,6 +7,19 @@ from gi.repository.GdkPixbuf import Pixbuf
 
 from data.common import ImageMetadata
 from data.filexp import Carousel, write_meta, load_meta
+
+
+def remove_control_and_redundant_space(s: str) -> str:
+    """Substitute multiple concatenated control and space characters into single whitespace."""
+
+    res = ''
+    for ch in s:
+        # Convert Unicode control and space characters into simple whitespaces
+        ss = ch if not stringprep.in_table_c11_c12(ch) and not stringprep.in_table_c21_c22(ch) else ' '
+        res += ss
+
+    # Remove redundant spaces
+    return ' '.join(res.split())
 
 
 class View:
@@ -142,6 +156,8 @@ class View:
     def set_author(self, author: str) -> None:
         if len(author) == 0:
             author = None
+        else:
+            author = remove_control_and_redundant_space(author)
 
         self.author = author
 
@@ -151,6 +167,8 @@ class View:
     def set_universe(self, universe: str) -> None:
         if len(universe) == 0:
             universe = None
+        else:
+            universe = remove_control_and_redundant_space(universe)
 
         self.universe = universe
 
@@ -163,7 +181,8 @@ class View:
         if len(characters) == 0:
             new_chars = None
         else:
-            new_chars = characters.split(',')
+            new_chars = remove_control_and_redundant_space(characters)
+            new_chars = new_chars.split(',')
             new_chars = [c.strip() for c in new_chars]
 
         self.characters = new_chars
@@ -182,7 +201,8 @@ class View:
         if len(tags) == 0:
             new_tags = None
         else:
-            new_tags = tags.split(',')
+            new_tags = remove_control_and_redundant_space(tags)
+            new_tags = new_tags.split(',')
             new_tags = [t.strip() for t in new_tags]
 
         self.tags = new_tags

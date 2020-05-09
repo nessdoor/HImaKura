@@ -120,9 +120,9 @@ class TestView(TestCase):
 
         # Set metadata and check coherence
         specimen.set_author(":DD")
-        specimen.set_universe("u")
-        specimen.set_characters("3, f,p")
-        specimen.set_tags("fa,s jo, l")
+        specimen.set_universe("\tu")
+        specimen.set_characters("3, f,p\n")
+        specimen.set_tags("fa,s \vjo,\u200dl")
         specimen.write()
 
         self.assertEqual(
