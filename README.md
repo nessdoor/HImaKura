@@ -31,13 +31,21 @@ knowledge system, ...).
 ## Building and testing
 ### Dependencies
 HImaKura is a [Python 3](https://python.org) application using [GTK 3](https://gtk.org) for the UI and
-[PyGObject](https://pygobject.readthedocs.io) as a language binding for GTK, so these (and their native runtime
-dependencies) are the minimum requirements for running the program.
+[PyGObject](https://pygobject.readthedocs.io) as a language binding for GTK.
 
-Build and test steps employ a dedicated [virtualenv](https://docs.python.org/3/tutorial/venv.html) in which all Python
-dependencies are installed. [PEX](https://github.com/pantsbuild/pex) is used for packaging the final application. If
-you plan on running these steps while offline, make sure to have these packages in your local cache, or instantiate the
-virtualenv beforehand.
+#### Runtime
+All runtime dependencies I am aware of should be recursively satisfied by having on your system:
+- Python 3
+- GTK 3
+- gobject-introspection
+
+#### Build-time
+Build and test steps employ a dedicated [virtualenv](https://docs.python.org/3/tutorial/venv.html) in which all
+dependencies are installed via pure Python packages and wheels. [PEX](https://github.com/pantsbuild/pex) is used for
+packaging the final application. If you plan on running these steps while offline, make sure to have these packages
+in your local cache, or instantiate the virtualenv beforehand.
+
+If I missed some dependencies, let me know.
 
 ### Test
 `git clone` the repository and then, as customary:
