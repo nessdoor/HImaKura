@@ -167,5 +167,5 @@ class FilterBuilder:
         Useful if you want to evaluate them in bulk with.
         """
 
-        return [self.get_author_filter(), self.get_universe_filter(), self.get_character_filter(),
-                self.get_tag_filter()]
+        return [self.get_id_filter(), self.get_filename_filter(), self.get_author_filter(), self.get_universe_filter(),
+                self.get_character_filter(), self.get_tag_filter()]
