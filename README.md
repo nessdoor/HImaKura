@@ -1,12 +1,13 @@
 # The Hentai Image Classifier
-The Hentai Image Classifier (クラシファイア), in spite of its maybe misguiding name, is a metadata editor with the erotic
-Japanese-style drawings in mind.
+The Hentai Image Classifier (クラシファイア), in spite of its maybe misguiding name, is a metadata editor and image viewer
+with the erotic Japanese-style drawings in mind.
 
 ![alt text](screenshots/main_screen.png "Main screen")
 
 It can open a directory, scan it for images and present you a simple interface to sequentially add, edit or clear their
-metadata. This metadata is recorded into XML files name-wise paired with images: if the image is `foo.png`, then its
-accompanying metadata file is called `foo.xml`, and resides under the same directory.
+metadata. Then, you can filter and view images based on this metadata, either in the same session or in a later one. All
+data is recorded into XML files name-wise paired with images: if the image is `foo.png`, then its accompanying metadata
+file is called `foo.xml`, and resides under the same directory.
 
 ### Metadata format and rationale
 Metadata files comply with the following DTD:
@@ -80,4 +81,3 @@ and the build directory, virtualenv and caches will be gone.
 ### New functionality
 * Image deletion
 * Bulk metadata export
-* Search filter

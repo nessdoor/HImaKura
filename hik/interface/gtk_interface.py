@@ -6,6 +6,7 @@ from typing import Callable, Optional
 from gi.repository import Gtk, GLib
 from gi.repository.GdkPixbuf import InterpType
 
+from data.filtering import FilterBuilder
 from interface.view import View
 
 
@@ -16,6 +17,7 @@ def signal_handler(h: Callable):
     return h
 
 
+# TODO This class has become gargantuan and ugly. Refactor asap
 class GtkInterface:
     """
     Singleton representing the application's GTK interface.
@@ -31,6 +33,7 @@ class GtkInterface:
     _builder: Gtk.Builder
     selected_dir: Optional[str]
     view: Optional[View]
+    filter_builder: Optional[FilterBuilder]
 
     @signal_handler
     def show_dir_selector(self, *args):
@@ -47,6 +50,75 @@ class GtkInterface:
 
         self.selected_dir = self["DirectoryOpener"].get_filename()
         self["ChooserButton"].set_sensitive(True)
+
+    @signal_handler
+    def show_filter_editor(self, *args):
+        self["FilterEditor"].show_all()
+
+    @signal_handler
+    def set_filters(self, *args):
+        """Configure a filter builder and setup a filtered view."""
+
+        self["FilterEditor"].hide()
+        self.metadata_box_sensitiveness(False)
+
+        # Configure all filters in one, ugly pass
+        self.filter_builder = FilterBuilder()
+        for spec in self["IdFilters"]:
+            self.filter_builder.id_constraint(spec[0], spec[1])
+        for spec in self["FilenameFilters"]:
+            self.filter_builder.filename_constraint(spec[0], spec[1])
+        for spec in self["AuthorFilters"]:
+            self.filter_builder.author_constraint(spec[0], spec[1])
+        for spec in self["UniverseFilters"]:
+            self.filter_builder.universe_constraint(spec[0], spec[1])
+        for spec in self["CharacterFilters"]:
+            self.filter_builder.character_constraint(spec[0], spec[1])
+        for spec in self["TagFilters"]:
+            self.filter_builder.tag_constraint(spec[0], spec[1])
+
+        self.filter_builder.characters_as_disjunctive(self["CharactersDisjunctiveSwitch"].get_active())
+        self.filter_builder.tags_as_disjunctive(self["TagsDisjunctiveSwitch"].get_active())
+
+        self.setup_view()
+
+    @signal_handler
+    def clear_filters(self, *args):
+        """Scrap the filter builder and re-setup view."""
+
+        self["FilterEditor"].hide()
+        self.metadata_box_sensitiveness(False)
+        self.filter_builder = None
+        self.setup_view()
+
+    @signal_handler
+    def add_filter(self, *args):
+        """Append an empty filter rule to the focused table."""
+
+        args[0].append()
+
+    @signal_handler
+    def del_filter(self, *args):
+        """Delete the selected filter rule from the focused table."""
+
+        selected = self[args[0].get_name() + "Selection"].get_selected()[1]
+        if selected is not None:
+            args[0].remove(selected)
+
+    @signal_handler
+    def filter_edited(self, *args):
+        """Set the new filter matcher on the edited filter rule."""
+
+        store = args[0]
+        store.set_value(store.get_iter(args[1]), 0, args[2])
+
+    @signal_handler
+    def filter_neg_toggle(self, *args):
+        """Toggle the excluded flag on the edited filter rule."""
+
+        store = args[0]
+        siter = store.get_iter(args[1])
+        store.set_value(siter, 1, not store.get_value(siter, 1))
 
     @signal_handler
     def setup_view(self, *args):
@@ -68,20 +140,17 @@ class GtkInterface:
 
         self["DirectoryOpener"].hide()
         try:
-            self.view = View(Path(self.selected_dir))
+            self.view = View(Path(self.selected_dir), self.filter_builder)
             self.view.set_prev_callback(_prev_callback)
             self.view.set_next_callback(_next_callback)
 
             # Initialize the UI only if the selected directory has images inside
             if self.view.has_next():
                 self.view.load_next()
-
-                self["AuthorField"].set_sensitive(True)
-                self["UniverseField"].set_sensitive(True)
-                self["CharactersField"].set_sensitive(True)
-                self["TagsField"].set_sensitive(True)
-                self["SaveButton"].set_sensitive(True)
-                self["ClearButton"].set_sensitive(True)
+                self.metadata_box_sensitiveness(True)
+                self["FilterEditorButton"].set_sensitive(True)
+            else:
+                self["ImageSurface"].clear()
         except OSError as ose:
             # Show error popup
             error_dialog = self["ErrorDialog"]
@@ -96,6 +165,14 @@ class GtkInterface:
             error_dialog.show_all()
             # Optimistically enable forward-iteration
             self["NextButton"].set_sensitive(True)
+
+    def metadata_box_sensitiveness(self, sensitive: bool):
+        self["AuthorField"].set_sensitive(sensitive)
+        self["UniverseField"].set_sensitive(sensitive)
+        self["CharactersField"].set_sensitive(sensitive)
+        self["TagsField"].set_sensitive(sensitive)
+        self["SaveButton"].set_sensitive(sensitive)
+        self["ClearButton"].set_sensitive(sensitive)
 
     @signal_handler
     def refresh_image(self, *args):
@@ -213,6 +290,7 @@ class GtkInterface:
             new_instance._builder = builder
             new_instance.selected_dir = None
             new_instance.view = None
+            new_instance.filter_builder = None
 
             cls.instance = new_instance
 

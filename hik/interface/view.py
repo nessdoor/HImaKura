@@ -7,6 +7,7 @@ from gi.repository.GdkPixbuf import Pixbuf
 
 from data.common import ImageMetadata
 from data.filexp import Carousel, write_meta, load_meta
+from data.filtering import FilterBuilder
 
 
 def remove_control_and_redundant_space(s: str) -> str:
@@ -44,19 +45,28 @@ class View:
     characters: Optional[Iterable[str]]
     tags: Optional[Iterable[str]]
 
-    def __init__(self, context_dir: Path):
+    def __init__(self, context_dir: Path, filter_factory: Optional[FilterBuilder] = None):
         """
         Instantiate a new view over the image/metadata file pairs at the specified path.
 
         The new view will have most of its data uninitialized, since to load them means to start scanning the contents.
         Therefore, before attempting to retrieve any data, call the `load_next()` method.
 
+        Optionally, a `FilterBuilder` can be provided as a second argument, which will be used for obtaining image
+        filters.
+
         :arg context_dir: path to the directory under which all operations will be performed
+        :arg filter_factory: a filter builder providing filters for the new view
         :raise FileNotFoundError: when the path points to an invalid location
         :raise NotADirectoryException: when the path point to a file that is not a directory
         """
 
-        self._carousel = Carousel(context_dir)
+        # If given a filter provider, use it to generate a set of filters and apply them on the carousel
+        if filter_factory is not None:
+            self._carousel = Carousel(context_dir, filter_factory.get_all_filters())
+        else:
+            self._carousel = Carousel(context_dir)
+
         self._prev_callback = None
         self._next_callback = None
 
