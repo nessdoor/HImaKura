@@ -84,12 +84,20 @@ class GtkInterface:
 
     @signal_handler
     def clear_filters(self, *args):
-        """Scrap the filter builder and re-setup view."""
-
-        self["FilterEditor"].hide()
-        self.metadata_box_sensitiveness(False)
         self.filter_builder = None
-        self.setup_view()
+        self["IdFilters"].clear()
+        self["FilenameFilters"].clear()
+        self["AuthorFilters"].clear()
+        self["UniverseFilters"].clear()
+        self["CharacterFilters"].clear()
+        self["TagFilters"].clear()
+
+        self["CharactersDisjunctiveSwitch"].set_active(False)
+        self["TagsDisjunctiveSwitch"].set_active(False)
+
+    @signal_handler
+    def close_filter_dialog(self, *args):
+        self["FilterEditor"].hide()
 
     @signal_handler
     def add_filter(self, *args):
