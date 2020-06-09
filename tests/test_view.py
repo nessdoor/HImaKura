@@ -6,7 +6,8 @@ from uuid import UUID
 
 from data.common import ImageMetadata
 from data.filexp import write_meta, load_meta
-from interface.view import View
+from ui.gui_gtk.interface import GtkView
+from ui.view import View
 
 
 class TestView(TestCase):
@@ -23,20 +24,20 @@ class TestView(TestCase):
         self.test_dir.cleanup()
 
     def test_uninitialized_behaviour(self):
-        specimen = View(Path(self.test_dir.name))
+        specimen = GtkView(Path(self.test_dir.name))
 
         # Verify that absence of loaded data is properly reported
         self.assertFalse(specimen.has_image_data())
-        self.assertIsNone(specimen.get_image_contents())
+        self.assertIsNone(specimen.get_image_data())
 
         specimen.load_next()
 
         # Verify that image data is now there
         self.assertTrue(specimen.has_image_data())
-        self.assertIsNotNone(specimen.get_image_contents())
+        self.assertIsNotNone(specimen.get_image_data())
 
     def test_carousel_behaviour(self):
-        specimen = View(Path(self.test_dir.name))
+        specimen = GtkView(Path(self.test_dir.name))
 
         # Verify correct forward-iteration
         specimen.load_next()
@@ -79,7 +80,7 @@ class TestView(TestCase):
                               tags=["t", "f"])
         write_meta(meta1, (Path(self.test_dir.name) / '01.png'))
 
-        specimen = View(Path(self.test_dir.name))
+        specimen = GtkView(Path(self.test_dir.name))
 
         # Collect metadata from the specimen
         results = dict()
@@ -92,7 +93,7 @@ class TestView(TestCase):
 
     def test_metadata_update(self):
         target_filename = '02.png'
-        specimen = View(Path(self.test_dir.name))
+        specimen = GtkView(Path(self.test_dir.name))
 
         # Scan until we find our target
         specimen.load_next()

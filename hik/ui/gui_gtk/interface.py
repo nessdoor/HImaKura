@@ -4,10 +4,37 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from gi.repository import Gtk, GLib
-from gi.repository.GdkPixbuf import InterpType
+from gi.repository.GdkPixbuf import InterpType, Pixbuf
 
 from data.filtering import FilterBuilder
-from interface.view import View
+from ui.view import View
+
+
+class GtkView(View):
+    _current_image: Pixbuf
+
+    def load_prev(self) -> None:
+        super().load_prev()
+        self._current_image = Pixbuf.new_from_file(str(self._image_path))
+
+    def load_next(self) -> None:
+        super().load_next()
+        self._current_image = Pixbuf.new_from_file(str(self._image_path))
+
+    def has_image_data(self) -> bool:
+        return hasattr(self, '_current_image')
+
+    def get_image_data(self) -> Optional[Pixbuf]:
+        """
+        Return the current image as a pixbuf copy.
+
+        :return: a pixbuf containing the image, or None if no image has been loaded
+        """
+
+        if self.has_image_data():
+            return self._current_image.copy()
+        else:
+            return None
 
 
 def signal_handler(h: Callable):
@@ -28,7 +55,7 @@ class GtkInterface:
     """
 
     instance = None
-    interface_markup = resources.read_text('interface', 'HImaKura.glade')
+    interface_markup = resources.read_text('ui.gui_gtk', 'HImaKura.glade')
 
     _builder: Gtk.Builder
     selected_dir: Optional[str]
@@ -134,7 +161,7 @@ class GtkInterface:
 
         self["DirectoryOpener"].hide()
         try:
-            self.view = View(Path(self.selected_dir), self.filter_builder)
+            self.view = GtkView(Path(self.selected_dir), self.filter_builder)
 
             # Initialize the UI only if the selected directory has images inside
             if self.view.has_next():
@@ -177,7 +204,7 @@ class GtkInterface:
 
         if self.view is not None and self.view.has_image_data():
             panel = self["ImageSurface"]
-            img_pix = self.view.get_image_contents()
+            img_pix = self.view.get_image_data()
             img_width, img_height = img_pix.get_width(), img_pix.get_height()
             # Get the visible area's size
             view_alloc = self["ImagePort"].get_allocation()

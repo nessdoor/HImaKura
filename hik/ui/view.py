@@ -1,9 +1,8 @@
 import stringprep
+from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Optional, Iterable, Callable
+from typing import Optional, Iterable
 from uuid import UUID
-
-from gi.repository.GdkPixbuf import Pixbuf
 
 from data.common import ImageMetadata
 from data.filexp import Carousel, write_meta, load_meta
@@ -23,19 +22,17 @@ def remove_control_and_redundant_space(s: str) -> str:
     return ' '.join(res.split())
 
 
-class View:
+class View(metaclass=ABCMeta):
     """
     The state of the current view.
 
     It wraps the inner carousel and retrieves images and metadata objects, exposing them to the frontend.
-    Images are exposed as unmodified GDK pixbufs.
+
+    This class is meant to be subclassed by UI concrete implementations.
     """
 
     _carousel: Carousel
-    _current_image: Pixbuf
     _image_path: Path
-    _prev_callback: Optional[Callable]
-    _next_callback: Optional[Callable]
 
     # Image metadata
     _id: UUID
@@ -67,9 +64,6 @@ class View:
         else:
             self._carousel = Carousel(context_dir)
 
-        self._prev_callback = None
-        self._next_callback = None
-
     def _update_meta(self, meta: ImageMetadata) -> None:
         self._id = meta.img_id
         self._filename = meta.filename
@@ -78,10 +72,11 @@ class View:
         self.characters = meta.characters
         self.tags = meta.tags
 
+    @abstractmethod
     def has_image_data(self) -> bool:
         """Tell if the current view contains valid image data."""
 
-        return hasattr(self, '_current_image')
+        pass
 
     def has_prev(self) -> bool:
         """Check whether there is a previous image."""
@@ -97,23 +92,19 @@ class View:
         """
         Retrieve the previous image and its metadata.
 
-        If a callback function was set, it will be called after having successfully loaded all the data.
         :raise StopIteration: when the start of the collection has already been reached
         """
 
         self._image_path = self._carousel.prev()
-        self._current_image = Pixbuf.new_from_file(str(self._image_path))
         self._update_meta(load_meta(self._image_path))
 
     def load_next(self) -> None:
         """Retrieve the next image and its metadata.
 
-        If a callback function was set, it will be called after having successfully loaded all the data.
         :raise StopIteration: when the end of the collection has already been reached
         """
 
         self._image_path = self._carousel.next()
-        self._current_image = Pixbuf.new_from_file(str(self._image_path))
         self._update_meta(load_meta(self._image_path))
 
     @property
@@ -124,17 +115,11 @@ class View:
     def filename(self) -> str:
         return self._filename
 
-    def get_image_contents(self) -> Optional[Pixbuf]:
-        """
-        Return the image as a pixbuf copy.
+    @abstractmethod
+    def get_image_data(self):
+        """Retrieve the currently-displayed image, if available."""
 
-        :return: a pixbuf containing the image, or None if no image has been loaded
-        """
-
-        if self.has_image_data():
-            return self._current_image.copy()
-        else:
-            return None
+        pass
 
     def set_author(self, author: str) -> None:
         if len(author) == 0:
