@@ -132,29 +132,18 @@ class GtkInterface:
     def setup_view(self, *args):
         """Setup the View object and activate buttons and fields."""
 
-        def _prev_callback(view: View):
-            self.refresh_image()
-            self.load_meta()
-
-            self["PrevButton"].set_sensitive(view.has_prev())
-            self["NextButton"].set_sensitive(view.has_next())
-
-        def _next_callback(view: View):
-            self.refresh_image()
-            self.load_meta()
-
-            self["PrevButton"].set_sensitive(view.has_prev())
-            self["NextButton"].set_sensitive(view.has_next())
-
         self["DirectoryOpener"].hide()
         try:
             self.view = View(Path(self.selected_dir), self.filter_builder)
-            self.view.set_prev_callback(_prev_callback)
-            self.view.set_next_callback(_next_callback)
 
             # Initialize the UI only if the selected directory has images inside
             if self.view.has_next():
                 self.view.load_next()
+                self.refresh_image()
+                self.load_meta()
+                self["PrevButton"].set_sensitive(self.view.has_prev())
+                self["NextButton"].set_sensitive(self.view.has_next())
+
                 self.metadata_box_sensitiveness(True)
                 self["FilterEditorButton"].set_sensitive(True)
             else:
@@ -207,6 +196,11 @@ class GtkInterface:
     def show_previous_image(self, *args):
         try:
             self.view.load_prev()
+            self.refresh_image()
+            self.load_meta()
+
+            self["PrevButton"].set_sensitive(self.view.has_prev())
+            self["NextButton"].set_sensitive(self.view.has_next())
         except StopIteration:
             # In case something goes wrong with the iteration, disable further movement in this direction
             self["PrevButton"].set_sensitive(False)
@@ -221,6 +215,11 @@ class GtkInterface:
     def show_next_image(self, *args):
         try:
             self.view.load_next()
+            self.refresh_image()
+            self.load_meta()
+
+            self["PrevButton"].set_sensitive(self.view.has_prev())
+            self["NextButton"].set_sensitive(self.view.has_next())
         except StopIteration:
             # In case something goes wrong with the iteration, disable further movement in this direction
             self["NextButton"].set_sensitive(False)

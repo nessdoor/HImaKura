@@ -78,27 +78,6 @@ class View:
         self.characters = meta.characters
         self.tags = meta.tags
 
-    def set_prev_callback(self, callback: Callable) -> None:
-        """Set the callback object to call after each `prev` invocation.
-
-        The callable object must accept a single argument representing this View object. Any returned value will be
-        ignored.
-        :arg callback: the callable object to be used as a callback
-        """
-
-        self._prev_callback = callback
-
-    def set_next_callback(self, callback: Callable) -> None:
-        """
-        Set the callback object to call after each `next` invocation.
-
-        The callable object must accept a single argument representing this View object. Any returned value will be
-        ignored.
-        :arg callback: the callable object to be used as a callback
-        """
-
-        self._next_callback = callback
-
     def has_image_data(self) -> bool:
         """Tell if the current view contains valid image data."""
 
@@ -126,9 +105,6 @@ class View:
         self._current_image = Pixbuf.new_from_file(str(self._image_path))
         self._update_meta(load_meta(self._image_path))
 
-        if self._prev_callback is not None:
-            self._prev_callback(self)
-
     def load_next(self) -> None:
         """Retrieve the next image and its metadata.
 
@@ -139,9 +115,6 @@ class View:
         self._image_path = self._carousel.next()
         self._current_image = Pixbuf.new_from_file(str(self._image_path))
         self._update_meta(load_meta(self._image_path))
-
-        if self._next_callback is not None:
-            self._next_callback(self)
 
     @property
     def image_id(self) -> UUID:

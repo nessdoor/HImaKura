@@ -38,42 +38,26 @@ class TestView(TestCase):
     def test_carousel_behaviour(self):
         specimen = View(Path(self.test_dir.name))
 
-        # Setup callback detection system
-        class Flag:
-            def __init__(self):
-                self.flag = None
-
-            def set_flag(self, val):
-                self.flag = val
-
-        prev_flag = Flag()
-        next_flag = Flag()
-
-        specimen.set_prev_callback(lambda v: prev_flag.set_flag(v.has_prev()))
-        specimen.set_next_callback(lambda v: next_flag.set_flag(v.has_next()))
-
-        # Verify correct forward-iteration and callback effect
+        # Verify correct forward-iteration
         specimen.load_next()
-        self.assertIsNone(prev_flag.flag)
-        self.assertTrue(next_flag.flag)
+        self.assertFalse(specimen.has_prev())
+        self.assertTrue(specimen.has_next())
         specimen.load_next()
-        self.assertFalse(next_flag.flag)
+        self.assertFalse(specimen.has_next())
 
-        # Verify StopIteration behaviour and callback absence
-        next_flag.flag = None
+        # Verify StopIteration behaviour
         self.assertRaises(StopIteration, specimen.load_next)
-        self.assertIsNone(prev_flag.flag)
-        self.assertIsNone(next_flag.flag)
+        self.assertTrue(specimen.has_prev())
+        self.assertFalse(specimen.has_next())
 
         # Do exactly the same for reverse-iteration
         specimen.load_prev()
-        self.assertFalse(prev_flag.flag)
-        self.assertIsNone(next_flag.flag)
+        self.assertFalse(specimen.has_prev())
+        self.assertTrue(specimen.has_next())
 
-        prev_flag.flag = None
         self.assertRaises(StopIteration, specimen.load_prev)
-        self.assertIsNone(prev_flag.flag)
-        self.assertIsNone(next_flag.flag)
+        self.assertFalse(specimen.has_prev())
+        self.assertTrue(specimen.has_next())
 
     @staticmethod
     def meta_extractor(v: View) -> ImageMetadata:
