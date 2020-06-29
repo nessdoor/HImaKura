@@ -41,10 +41,15 @@ All runtime dependencies I am aware of should be recursively satisfied by having
 - gobject-introspection
 
 #### Build-time
-Build and test steps employ a dedicated [virtualenv](https://docs.python.org/3/tutorial/venv.html) in which all
+Build and test steps employ a dedicated [virtualenv](https://docs.python.org/3/tutorial/venv.html) in which most
 dependencies are installed via pure Python packages and wheels. [PEX](https://github.com/pantsbuild/pex) is used for
-packaging the final application. If you plan on running these steps while offline, make sure to have these packages
-in your local cache, or instantiate the virtualenv beforehand.
+packaging the final application.
+
+Apparently, PyGObject and [PyCairo](https://pycairo.readthedocs.io) don't come with pre-built wheels, therefore their
+build dependencies need to be on your system.
+
+If you plan on running these steps while offline, make sure to have these packages in your local cache, or instantiate
+the virtualenv beforehand.
 
 If I missed some dependencies, let me know.
 
