@@ -34,12 +34,12 @@ class FilterBuilder:
 
         self._sets: Dict[str, FilterBuilder.ConstraintsSet] = {}
         # TODO can this be made reflective on ImageMetadata?
-        for field in ['img_id', 'filename', 'author', 'universe', 'characters', 'tags']:
+        for field in ['img_id', 'file', 'author', 'universe', 'characters', 'tags']:
             self._sets[field] = FilterBuilder.ConstraintsSet(set(), False)
 
         # Set disjunctive default as True for single-valued properties.
         self._sets['img_id'].is_disjunctive = True
-        self._sets['filename'].is_disjunctive = True
+        self._sets['file'].is_disjunctive = True
         self._sets['author'].is_disjunctive = True
         self._sets['universe'].is_disjunctive = True
 
@@ -101,12 +101,12 @@ class FilterBuilder:
     def filename_constraint(self, filename: str, exclude: bool = False) -> FilterBuilder:
         """Set a disjunctive constraint on the file name."""
 
-        return self._set_constraint('filename', filename, exclude)
+        return self._set_constraint('file', filename, exclude)
 
     def get_filename_filter(self) -> Callable[[ImageMetadata], bool]:
         """Get the file name filter."""
 
-        return self._make_single_value_filter('filename')
+        return self._make_single_value_filter('file')
 
     def author_constraint(self, author: Optional[str], exclude: bool = False) -> FilterBuilder:
         """Set a disjunctive constraint on the author."""

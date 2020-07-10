@@ -14,7 +14,7 @@ Metadata files comply with the following DTD:
 ```dtd
 <!ELEMENT image (author?,universe?,characters?,tags?)>
 <!ATTLIST image id ID #REQUIRED
-          filename CDATA #REQUIRED>
+          file CDATA #REQUIRED>
 <!ELEMENT author (#PCDATA)>
 <!ELEMENT universe (#PCDATA)>
 <!ELEMENT characters (character+)>
@@ -28,6 +28,9 @@ integration and consolidation.
 For example, one could implement an ETL pipeline starting with a fully-textual concatenation of the files, then
 enclosing the result into a suitable root element before feeding everything to an XML processing system (e.g. XML DBMS,
 knowledge system, ...).
+
+File references are stored as URIs. As of now, their correctness and the existence of referred resources are not
+checked.
 
 ## Building and testing
 ### Dependencies

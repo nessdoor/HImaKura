@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ElTree
 from uuid import UUID
+from uri import URI
 
 from data.common import ImageMetadata
 
@@ -12,7 +13,7 @@ def generate_xml(metadata: ImageMetadata) -> str:
     :return: the generated XML in Unicode string format
     """
 
-    new_xml_root = ElTree.Element('image', {'id': str(metadata.img_id), 'filename': metadata.filename})
+    new_xml_root = ElTree.Element('image', {'id': str(metadata.img_id), 'file': str(metadata.file)})
 
     if metadata.author is not None:
         ElTree.SubElement(new_xml_root, 'author').text = metadata.author
@@ -41,14 +42,19 @@ def parse_xml(data: str) -> ImageMetadata:
 
     image_elem = ElTree.fromstring(data)
     img_id = image_elem.get('id')
-    filename = image_elem.get('filename')
+    file = image_elem.get('file')
+
+    # If we were presented with a legacy XML not containing 'file', use the legacy name 'filename'
+    if file is None:
+        file = image_elem.get('filename')
+
     author = image_elem.find("./author")
     universe = image_elem.find("./universe")
     characters = [char.text for char in image_elem.findall("./characters/character")]
     tags = [tag.text for tag in image_elem.findall("./tags/tag")]
 
     return ImageMetadata(img_id=UUID(img_id),
-                         filename=filename,
+                         file=URI(file),
                          author=author.text if author is not None else None,
                          universe=universe.text if universe is not None else None,
                          characters=characters if len(characters) != 0 else None,

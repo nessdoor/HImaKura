@@ -2,6 +2,7 @@ from mimetypes import guess_type
 from pathlib import Path
 from typing import List, Callable, Iterable
 from uuid import uuid4
+from uri import URI
 from xml.etree.ElementTree import ParseError
 
 from data.common import ImageMetadata
@@ -132,6 +133,15 @@ def _construct_metadata_path(image_path: Path) -> Path:
     return image_path.parent / (image_path.stem + '.xml')
 
 
+def _old_to_new_schema(img_path: Path, old_meta: ImageMetadata):
+    return ImageMetadata(img_id=old_meta.img_id,
+                         file=URI(img_path),
+                         author=old_meta.author,
+                         universe=old_meta.universe,
+                         characters=old_meta.characters,
+                         tags=old_meta.tags)
+
+
 def load_meta(img_file: Path) -> ImageMetadata:
     """
     Load the metadata tuple for a given image file.
@@ -148,10 +158,14 @@ def load_meta(img_file: Path) -> ImageMetadata:
         try:
             with meta_file.open() as mf:
                 metadata = parse_xml(mf.read())
+
+                # Check if 'file' is a valid URI, otherwise make it so (for retro-compatibility with older schema)
+                if metadata.file.scheme is None:
+                    metadata = _old_to_new_schema(img_file, metadata)
         except (OSError, ParseError):
-            metadata = ImageMetadata(uuid4(), img_file.name, None, None, None, None)
+            metadata = ImageMetadata(uuid4(), URI(img_file), None, None, None, None)
     else:
-        metadata = ImageMetadata(uuid4(), img_file.name, None, None, None, None)
+        metadata = ImageMetadata(uuid4(), URI(img_file), None, None, None, None)
 
     return metadata
 

@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import Optional, Iterable
 from uuid import UUID
+from uri import URI
 
 from data.common import ImageMetadata
 from data.filexp import Carousel, write_meta, load_meta
@@ -36,6 +37,7 @@ class View(metaclass=ABCMeta):
 
     # Image metadata
     _id: UUID
+    # TODO: this is inconsistent with the real metadata, as there's a URI there, now; rethink these attributes
     _filename: str
     author: Optional[str]
     universe: Optional[str]
@@ -66,7 +68,7 @@ class View(metaclass=ABCMeta):
 
     def _update_meta(self, meta: ImageMetadata) -> None:
         self._id = meta.img_id
-        self._filename = meta.filename
+        self._filename = meta.file.path.name
         self.author = meta.author
         self.universe = meta.universe
         self.characters = meta.characters
@@ -190,5 +192,10 @@ class View(metaclass=ABCMeta):
         :raise OSError: when the metadata file couldn't be opened
         """
 
-        meta_obj = ImageMetadata(self._id, self._filename, self.author, self.universe, self.characters, self.tags)
+        meta_obj = ImageMetadata(self._id,
+                                 URI(self._image_path),
+                                 self.author,
+                                 self.universe,
+                                 self.characters,
+                                 self.tags)
         write_meta(meta_obj, self._image_path)
