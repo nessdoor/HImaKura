@@ -1,9 +1,10 @@
 from mimetypes import guess_type
 from pathlib import Path
 from typing import List, Callable, Iterable
-from uuid import uuid4
-from uri import URI
+from uuid import uuid3, NAMESPACE_URL
 from xml.etree.ElementTree import ParseError
+
+from uri import URI
 
 from data.common import ImageMetadata
 from data.xmngr import parse_xml, generate_xml
@@ -163,9 +164,9 @@ def load_meta(img_file: Path) -> ImageMetadata:
                 if metadata.file.scheme is None:
                     metadata = _old_to_new_schema(img_file, metadata)
         except (OSError, ParseError):
-            metadata = ImageMetadata(uuid4(), URI(img_file), None, None, None, None)
+            metadata = ImageMetadata(uuid3(NAMESPACE_URL, str(URI(img_file))), URI(img_file), None, None, None, None)
     else:
-        metadata = ImageMetadata(uuid4(), URI(img_file), None, None, None, None)
+        metadata = ImageMetadata(uuid3(NAMESPACE_URL, str(URI(img_file))), URI(img_file), None, None, None, None)
 
     return metadata
 
