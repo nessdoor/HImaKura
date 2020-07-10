@@ -1,11 +1,34 @@
 from __future__ import annotations
 
+from functools import singledispatch
 from operator import attrgetter
 from typing import Callable, Dict, Set, List, Optional, Iterable, TypeVar
 
 from more_itertools import partition
+from uri import URI
 
 from data.common import ImageMetadata
+
+T = TypeVar('T')
+
+
+def wrap_none(o: Optional[Iterable[T]]) -> Iterable[Optional[T]]:
+    """Wrap a None object into an Iterable containing only a None, or returns the object itself if not None"""
+    return o if o is not None else (None,)
+
+
+@singledispatch
+def stringify(o) -> Optional[str]:
+    """Return the appropriate string form of the object if this is not None, None otherwise"""
+    if o is None:
+        return None
+
+    return str(o)
+
+
+@stringify.register
+def _(i: URI) -> str:
+    return i.path.name
 
 
 class FilterBuilder:
@@ -57,21 +80,16 @@ class FilterBuilder:
         # Filters for single-valued properties are only useful if disjunctive
         if len(excluded) > 0:
             # Negative matches in a disjunctive evaluation totally eclipse positive matches
-            return lambda metadata: getattr(metadata, constraints_set) not in excluded
+            return lambda metadata: stringify(getattr(metadata, constraints_set)) not in excluded
         else:
             if len(included) > 0:
-                return lambda metadata: getattr(metadata, constraints_set) in included
+                return lambda metadata: stringify(getattr(metadata, constraints_set)) in included
             else:
                 # No constraints have been specified: match anything
                 return lambda _: True
 
     # Generate filters for multi-valued properties
     def _make_multi_value_filter(self, constraints_set: str) -> Callable[[ImageMetadata], bool]:
-        T = TypeVar('T')
-
-        def wrap_none(o: Optional[Iterable[T]]) -> Iterable[T]:
-            return o if o is not None else [None]
-
         included, excluded = partition(attrgetter('inverted'), self._sets[constraints_set].constraints)
         included = frozenset(map(attrgetter('match'), included))
         excluded = frozenset(map(attrgetter('match'), excluded))

@@ -72,11 +72,11 @@ class TestFilters(ut.TestCase):
         self.assertFalse(author_filter(el3))
 
         # Test explicit exclusion
-        filter_builder.author_constraint(author2, True)
-        author_filter = filter_builder.get_author_filter()
-        self.assertTrue(author_filter(el1))
-        self.assertFalse(author_filter(el2))
-        self.assertTrue(author_filter(el3))
+        filter_builder.id_constraint(str(id2), True)
+        id_filter = filter_builder.get_id_filter()
+        self.assertTrue(id_filter(el1))
+        self.assertFalse(id_filter(el2))
+        self.assertTrue(id_filter(el3))
 
     def test_collective_conjunctive_filter(self):
         # Verify the effectiveness of multi-valued matchers, when evaluated in conjunction
