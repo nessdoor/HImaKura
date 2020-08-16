@@ -34,11 +34,11 @@
       <column type="gboolean"/>
     </columns>
   </object>
-  <object class="GtkWindow" id="MainWindow">
+  <object class="GtkApplicationWindow" id="MainWindow">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Hentai Image Classifier</property>
-    <property name="window_position">center</property>
-    <signal name="destroy" handler="quit_program" swapped="no"/>
+    <property name="show_menubar">False</property>
+    <signal name="destroy" handler="destroy" swapped="no"/>
     <child>
       <object class="GtkGrid">
         <property name="visible">True</property>
@@ -154,7 +154,6 @@
                     <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                     <property name="tooltip_text" translatable="yes">Comma separated list of tags...</property>
-                    <property name="halign">baseline</property>
                     <property name="valign">baseline</property>
                     <property name="wrap_mode">word-char</property>
                     <property name="left_margin">8</property>
@@ -188,7 +187,10 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
-                <signal name="clicked" handler="clear_fields" swapped="no"/>
+                <signal name="clicked" handler="clear" object="AuthorField" swapped="no"/>
+                <signal name="clicked" handler="clear" object="CharactersField" swapped="no"/>
+                <signal name="clicked" handler="clear" object="TagsField" swapped="no"/>
+                <signal name="clicked" handler="clear" object="UniverseField" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -274,10 +276,9 @@
                 <property name="label">gtk-open</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="is_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
-                <signal name="clicked" handler="show_dir_selector" swapped="no"/>
+                <signal name="clicked" handler="show" object="DirectoryOpener" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -292,7 +293,7 @@
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <signal name="clicked" handler="show_filter_editor" swapped="no"/>
+                <signal name="clicked" handler="show" object="FilterEditor" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -307,7 +308,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
-                <signal name="clicked" handler="quit_program" swapped="no"/>
+                <signal name="clicked" handler="destroy" object="MainWindow" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -443,9 +444,9 @@
     <property name="transient_for">MainWindow</property>
     <property name="action">select-folder</property>
     <property name="create_folders">False</property>
-    <signal name="current-folder-changed" handler="change_selected_dir" swapped="no"/>
+    <signal name="current-folder-changed" handler="valid_path_check" swapped="no"/>
     <signal name="delete-event" handler="hide_on_delete" swapped="no"/>
-    <signal name="selection-changed" handler="change_selected_dir" swapped="no"/>
+    <signal name="selection-changed" handler="valid_path_check" swapped="no"/>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can_focus">False</property>
@@ -463,7 +464,8 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
-                <signal name="clicked" handler="setup_view" swapped="no"/>
+                <signal name="clicked" handler="hide" object="DirectoryOpener" swapped="no"/>
+                <signal name="clicked" handler="setup_view" object="DirectoryOpener" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -478,7 +480,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
-                <signal name="clicked" handler="hide_dir_selector" swapped="no"/>
+                <signal name="clicked" handler="hide" object="DirectoryOpener" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -1449,7 +1451,7 @@
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
                 <property name="always_show_image">True</property>
-                <signal name="clicked" handler="close_filter_dialog" swapped="no"/>
+                <signal name="clicked" handler="hide" object="FilterEditor" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -1485,6 +1487,7 @@
                     <property name="receives_default">True</property>
                     <property name="use_stock">True</property>
                     <property name="always_show_image">True</property>
+                    <signal name="clicked" handler="hide" object="FilterEditor" swapped="no"/>
                     <signal name="clicked" handler="set_filters" swapped="no"/>
                   </object>
                   <packing>

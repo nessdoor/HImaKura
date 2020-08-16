@@ -1,9 +1,8 @@
 from importlib import resources
-from inspect import getmembers
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Optional, MutableMapping
 
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, GLib, Gio
 from gi.repository.GdkPixbuf import InterpType, Pixbuf
 
 from data.filtering import FilterBuilder
@@ -11,6 +10,8 @@ from ui.view import View
 
 
 class GtkView(View):
+    """Specialization of the View class that provides image data as Pixbuf objects."""
+
     _current_image: Pixbuf
 
     def load_prev(self) -> None:
@@ -37,303 +38,340 @@ class GtkView(View):
             return None
 
 
-def signal_handler(h: Callable):
-    """Mark function as a signal handler."""
+class Signals:
+    """A registry class for keeping track of signal handlers."""
 
-    h._signal_handler = True
-    return h
+    handlers: MutableMapping[str, Callable] = dict()
+
+    @classmethod
+    def register(cls, h: Callable) -> Callable:
+        """Register a new handler."""
+
+        cls.handlers[h.__name__] = h
+        return h
 
 
-# TODO This class has become gargantuan and ugly. Refactor asap
-class GtkInterface:
-    """
-    Singleton representing the application's GTK interface.
+# TODO can this global state be turned into a more rational state representation?
+class State:
+    """Impure class containing the few stateful objects for the GTK interface."""
 
-    The sole instance is created on demand and is initialized with the UI's XML description, contained in
-    `HImaKura.glade`.
-    Some of its methods are marked as handlers and invoked by the GTK loop.
-    """
+    builder: Gtk.Builder = None
+    view: GtkView = None
 
-    instance = None
+    @classmethod
+    def get_object(cls, obj_id: str):
+        """Retrieve the GTK object identified by the specified ID."""
+
+        return cls.builder.get_object(obj_id)
+
+
+class GtkInstance(Gtk.Application):
+    """The GTK application instance for HImaKura."""
+
+    appId = "network.entropic.himakura"
     interface_markup = resources.read_text('ui.gui_gtk', 'HImaKura.glade')
 
-    _builder: Gtk.Builder
-    selected_dir: Optional[str]
-    view: Optional[View]
-    filter_builder: Optional[FilterBuilder]
+    def __init__(self):
+        super().__init__(application_id=self.appId, flags=Gio.ApplicationFlags.FLAGS_NONE)
 
-    @signal_handler
-    def show_dir_selector(self, *args):
-        window = self["DirectoryOpener"]
-        window.show_all()
+        # Connect signal handlers for this application
+        self.connect("startup", self.startup)
+        self.connect("activate", self.activate)
+        self.connect("shutdown", self.shutdown)
 
-    @signal_handler
-    def hide_dir_selector(self, *args):
-        self["DirectoryOpener"].hide()
+    def startup(self, *args):
+        """Load the interface description file and connect the signal handlers."""
 
-    @signal_handler
-    def change_selected_dir(self, *args):
-        """Alter the currently selected directory."""
+        State.builder = Gtk.Builder.new_from_string(self.interface_markup, -1)
+        State.builder.connect_signals(Signals.handlers)
 
-        self.selected_dir = self["DirectoryOpener"].get_filename()
-        self["ChooserButton"].set_sensitive(True)
+    def activate(self, *args):
+        """Register the application window with the instance and show the main interface."""
 
-    @signal_handler
-    def show_filter_editor(self, *args):
-        self["FilterEditor"].show_all()
+        main_window = State.get_object("MainWindow")
+        self.add_window(main_window)
+        main_window.present()
 
-    @signal_handler
-    def set_filters(self, *args):
-        """Configure a filter builder and setup a filtered view."""
+    def shutdown(self, *args):
+        """Destroy the application window."""
 
-        self["FilterEditor"].hide()
-        self.metadata_box_sensitiveness(False)
+        State.get_object("MainWindow").destroy()
 
-        # Configure all filters in one, ugly pass
-        self.filter_builder = FilterBuilder()
-        for spec in self["IdFilters"]:
-            self.filter_builder.id_constraint(spec[0], spec[1])
-        for spec in self["FilenameFilters"]:
-            self.filter_builder.filename_constraint(spec[0], spec[1])
-        for spec in self["AuthorFilters"]:
-            self.filter_builder.author_constraint(spec[0], spec[1])
-        for spec in self["UniverseFilters"]:
-            self.filter_builder.universe_constraint(spec[0], spec[1])
-        for spec in self["CharacterFilters"]:
-            self.filter_builder.character_constraint(spec[0], spec[1])
-        for spec in self["TagFilters"]:
-            self.filter_builder.tag_constraint(spec[0], spec[1])
 
-        self.filter_builder.characters_as_disjunctive(self["CharactersDisjunctiveSwitch"].get_active())
-        self.filter_builder.tags_as_disjunctive(self["TagsDisjunctiveSwitch"].get_active())
+# Utilities #
+def notify_error(primary: str, secondary: Optional[str] = None):
+    """Show an error dialog with the specified primary and secondary text."""
 
-        self.setup_view()
+    error_dialog = State.get_object("ErrorDialog")
+    error_dialog.set_markup(primary)
+    error_dialog.format_secondary_text(secondary)
+    error_dialog.show_all()
 
-    @signal_handler
-    def clear_filters(self, *args):
-        self.filter_builder = None
-        self["IdFilters"].clear()
-        self["FilenameFilters"].clear()
-        self["AuthorFilters"].clear()
-        self["UniverseFilters"].clear()
-        self["CharacterFilters"].clear()
-        self["TagFilters"].clear()
 
-        self["CharactersDisjunctiveSwitch"].set_active(False)
-        self["TagsDisjunctiveSwitch"].set_active(False)
+def metadata_box_sensitiveness(sensitive: bool):
+    """Set sensitivity for the whole metadata area."""
 
-    @signal_handler
-    def close_filter_dialog(self, *args):
-        self["FilterEditor"].hide()
+    State.get_object("AuthorField").set_sensitive(sensitive)
+    State.get_object("UniverseField").set_sensitive(sensitive)
+    State.get_object("CharactersField").set_sensitive(sensitive)
+    State.get_object("TagsField").set_sensitive(sensitive)
+    State.get_object("SaveButton").set_sensitive(sensitive)
+    State.get_object("ClearButton").set_sensitive(sensitive)
 
-    @signal_handler
-    def add_filter(self, *args):
-        """Append an empty filter rule to the focused table."""
 
-        args[0].append()
+@Signals.register
+def set_sensitive(obj):
+    """Make an object sensitive."""
 
-    @signal_handler
-    def del_filter(self, *args):
-        """Delete the selected filter rule from the focused table."""
+    obj.set_sensitive(True)
 
-        selected = self[args[0].get_name() + "Selection"].get_selected()[1]
-        if selected is not None:
-            args[0].remove(selected)
 
-    @signal_handler
-    def filter_edited(self, *args):
-        """Set the new filter matcher on the edited filter rule."""
+@Signals.register
+def clear(obj):
+    """
+    Clear the contents of the provided object, if supported.
 
-        store = args[0]
-        store.set_value(store.get_iter(args[1]), 0, args[2])
+    For now, only Gtk.Entry and Gtk.TextView objects are cleared.
+    """
 
-    @signal_handler
-    def filter_neg_toggle(self, *args):
-        """Toggle the excluded flag on the edited filter rule."""
+    if isinstance(obj, Gtk.Entry):
+        obj.set_text('')
+    elif isinstance(obj, Gtk.TextView):
+        obj.get_buffer.set_text('')
 
-        store = args[0]
-        siter = store.get_iter(args[1])
-        store.set_value(siter, 1, not store.get_value(siter, 1))
 
-    @signal_handler
-    def setup_view(self, *args):
-        """Setup the View object and activate buttons and fields."""
+@Signals.register
+def valid_path_check(chooser):
+    """Check if the currently-pointed directory is valid."""
 
-        self["DirectoryOpener"].hide()
-        try:
-            self.view = GtkView(Path(self.selected_dir), self.filter_builder)
+    if chooser.get_filename() is not None:
+        set_sensitive(State.get_object("ChooserButton"))
 
-            # Initialize the UI only if the selected directory has images inside
-            if self.view.has_next():
-                self.view.load_next()
-                self.refresh_image()
-                self.load_meta()
-                self["PrevButton"].set_sensitive(self.view.has_prev())
-                self["NextButton"].set_sensitive(self.view.has_next())
 
-                self.metadata_box_sensitiveness(True)
-                self["FilterEditorButton"].set_sensitive(True)
-            else:
-                self["ImageSurface"].clear()
-        except OSError as ose:
-            # Show error popup
-            error_dialog = self["ErrorDialog"]
-            error_dialog.set_markup("<b>Error opening " + self.selected_dir + "</b>")
-            error_dialog.format_secondary_text(str(ose))
-            error_dialog.show_all()
-        except GLib.Error as ge:
-            # Invalid data on first image
-            error_dialog = self["ErrorDialog"]
-            error_dialog.set_markup("<b>Error while loading first image</b>")
-            error_dialog.format_secondary_text(ge.message)
-            error_dialog.show_all()
-            # Optimistically enable forward-iteration
-            self["NextButton"].set_sensitive(True)
+@Signals.register
+def debug(*args):
+    """Print the arguments received from the GTk signaling system."""
 
-    def metadata_box_sensitiveness(self, sensitive: bool):
-        self["AuthorField"].set_sensitive(sensitive)
-        self["UniverseField"].set_sensitive(sensitive)
-        self["CharactersField"].set_sensitive(sensitive)
-        self["TagsField"].set_sensitive(sensitive)
-        self["SaveButton"].set_sensitive(sensitive)
-        self["ClearButton"].set_sensitive(sensitive)
+    print(args)
 
-    @signal_handler
-    def refresh_image(self, *args):
-        """Reload, resize and refresh the displayed image, taking it from the backing View object."""
 
-        if self.view is not None and self.view.has_image_data():
-            panel = self["ImageSurface"]
-            img_pix = self.view.get_image_data()
-            img_width, img_height = img_pix.get_width(), img_pix.get_height()
-            # Get the visible area's size
-            view_alloc = self["ImagePort"].get_allocation()
-            view_width, view_height = view_alloc.width, view_alloc.height
+# Generic window signal handlers #
+@Signals.register
+def destroy(obj):
+    obj.destroy()
 
-            # If the visible area is smaller than the image, calculate the scaling factor and set the new image sizes
-            # (Thanks to https://stackoverflow.com/a/1106367/13140497 for leading me down the right path)
-            if img_width > view_width or img_height > view_height:
-                s_fact = min(view_width / img_width, view_height / img_height)
-                img_width, img_height = img_width * s_fact, img_height * s_fact
 
-            # Load and resize the image
-            panel.set_from_pixbuf(img_pix.scale_simple(img_width, img_height, InterpType.BILINEAR))
+@Signals.register
+def hide_on_delete(obj):
+    obj.hide_on_delete()
 
-    @signal_handler
-    def show_previous_image(self, *args):
-        try:
-            self.view.load_prev()
-            self.refresh_image()
-            self.load_meta()
 
-            self["PrevButton"].set_sensitive(self.view.has_prev())
-            self["NextButton"].set_sensitive(self.view.has_next())
-        except StopIteration:
-            # In case something goes wrong with the iteration, disable further movement in this direction
-            self["PrevButton"].set_sensitive(False)
-        except GLib.Error as ge:
-            # Invalid image data
-            error_dialog = self["ErrorDialog"]
-            error_dialog.set_markup("<b>Error while loading previous image</b>")
-            error_dialog.format_secondary_text(ge.message)
-            error_dialog.show_all()
+@Signals.register
+def show(obj):
+    obj.show_all()
 
-    @signal_handler
-    def show_next_image(self, *args):
-        try:
-            self.view.load_next()
-            self.refresh_image()
-            self.load_meta()
 
-            self["PrevButton"].set_sensitive(self.view.has_prev())
-            self["NextButton"].set_sensitive(self.view.has_next())
-        except StopIteration:
-            # In case something goes wrong with the iteration, disable further movement in this direction
-            self["NextButton"].set_sensitive(False)
-        except GLib.Error as ge:
-            # Invalid image data
-            error_dialog = self["ErrorDialog"]
-            error_dialog.set_markup("<b>Error while loading next image</b>")
-            error_dialog.format_secondary_text(ge.message)
-            error_dialog.show_all()
+@Signals.register
+def hide(obj):
+    obj.hide()
 
-    @signal_handler
-    def clear_fields(self, *args):
-        self["AuthorField"].set_text('')
-        self["UniverseField"].set_text('')
-        self["CharactersField"].set_text('')
-        self["TagsField"].get_buffer().set_text('')
 
-    def load_meta(self):
-        """Display metadata, pre-filling the fields."""
+# Image and metadata handling and navigation #
+@Signals.register
+def setup_view(chooser, filtering_context: Optional[FilterBuilder] = None):
+    """Setup the View object and activate buttons and fields."""
 
-        self["IDLabel"].set_label(str(self.view.image_id))
-        self["FileNameLabel"].set_label(self.view.filename)
-        author = self.view.get_author()
-        self["AuthorField"].set_text(author if author is not None else '')
-        universe = self.view.get_universe()
-        self["UniverseField"].set_text(universe if universe is not None else '')
-        characters = self.view.get_characters()
-        self["CharactersField"].set_text(characters if characters is not None else '')
-        tags = self.view.get_tags()
-        self["TagsField"].get_buffer().set_text(tags if tags is not None else '')
+    try:
+        State.view = GtkView(Path(chooser.get_filename()), filtering_context)
 
-    @signal_handler
-    def save_meta(self, *args):
-        """Overwrite the image's metadata with the field's contents."""
+        # Initialize the UI only if the selected directory has images inside
+        if State.view.has_next():
+            State.view.load_next()
+            refresh_image()
+            load_meta()
+            State.get_object("PrevButton").set_sensitive(State.view.has_prev())
+            State.get_object("NextButton").set_sensitive(State.view.has_next())
 
-        self.view.set_author(self["AuthorField"].get_text())
-        self.view.set_universe(self["UniverseField"].get_text())
-        self.view.set_characters(self["CharactersField"].get_text())
+            metadata_box_sensitiveness(True)
+            State.get_object("FilterEditorButton").set_sensitive(True)
+        else:
+            State.get_object("ImageSurface").clear()
+    except OSError as ose:
+        # Show error popup
+        notify_error("<b>Error opening " + chooser.get_filename() + "</b>", str(ose))
+    except GLib.Error as ge:
+        # Invalid data on first image
+        notify_error("<b>Error while loading first image</b>", ge.message)
+        # Optimistically enable forward-iteration
+        State.get_object("NextButton").set_sensitive(True)
 
-        tags_buffer = self["TagsField"].get_buffer()
-        self.view.set_tags(tags_buffer.get_text(tags_buffer.get_start_iter(), tags_buffer.get_end_iter(), False))
 
-        try:
-            self.view.write()
-        except OSError as ose:
-            error_dialog = self["ErrorDialog"]
-            error_dialog.set_markup("<b>Error while saving metadata</b>")
-            error_dialog.format_secondary_text(str(ose))
-            error_dialog.show_all()
+@Signals.register
+def refresh_image(*args):
+    """Reload, resize and refresh the displayed image, taking it from the backing View object."""
 
-    def launch(self):
-        """Show the main window and start the GTK thread."""
+    if State.view is not None and State.view.has_image_data():
+        panel = State.get_object("ImageSurface")
+        img_pix = State.view.get_image_data()
+        img_width, img_height = img_pix.get_width(), img_pix.get_height()
+        # Get the visible area's size
+        view_alloc = State.get_object("ImagePort").get_allocation()
+        view_width, view_height = view_alloc.width, view_alloc.height
 
-        self["MainWindow"].show_all()
-        Gtk.main()
+        # If the visible area is smaller than the image, calculate the scaling factor and set the new image sizes
+        # (Thanks to https://stackoverflow.com/a/1106367/13140497 for leading me down the right path)
+        if img_width > view_width or img_height > view_height:
+            s_fact = min(view_width / img_width, view_height / img_height)
+            img_width, img_height = img_width * s_fact, img_height * s_fact
 
-    def __new__(cls):
-        """Create the new singleton, if not already existing, and return it. Otherwise, return the existing one."""
+        # Load and resize the image
+        panel.set_from_pixbuf(img_pix.scale_simple(img_width, img_height, InterpType.BILINEAR))
 
-        if cls.instance is None:
-            new_instance = object.__new__(cls)
-            signal_mapping = dict()
-            # Register the signal handlers
-            for name, meth in getmembers(new_instance, lambda m: hasattr(m, '_signal_handler') and m._signal_handler):
-                signal_mapping[name] = meth
 
-            # Special handler for GTK's hide-on-delete
-            signal_mapping["hide_on_delete"] = lambda *args: args[0].hide_on_delete()
-            # Handler for quitting. There was no point in keeping this as a static method (maybe).
-            signal_mapping["quit_program"] = Gtk.main_quit
+@Signals.register
+def show_previous_image(*args):
+    try:
+        State.view.load_prev()
+        refresh_image()
+        load_meta()
 
-            builder = Gtk.Builder.new_from_string(cls.interface_markup, -1)
-            builder.connect_signals(signal_mapping)
+        State.get_object("PrevButton").set_sensitive(State.view.has_prev())
+        State.get_object("NextButton").set_sensitive(State.view.has_next())
+    except StopIteration:
+        # In case something goes wrong with the iteration, disable further movement in this direction
+        State.get_object("PrevButton").set_sensitive(False)
+    except GLib.Error as ge:
+        # Invalid image data
+        error_dialog = State.get_object("ErrorDialog")
+        error_dialog.set_markup("<b>Error while loading previous image</b>")
+        error_dialog.format_secondary_text(ge.message)
+        error_dialog.show_all()
 
-            new_instance._builder = builder
-            new_instance.selected_dir = None
-            new_instance.view = None
-            new_instance.filter_builder = None
 
-            cls.instance = new_instance
+@Signals.register
+def show_next_image(*args):
+    try:
+        State.view.load_next()
+        refresh_image()
+        load_meta()
 
-        return cls.instance
+        State.get_object("PrevButton").set_sensitive(State.view.has_prev())
+        State.get_object("NextButton").set_sensitive(State.view.has_next())
+    except StopIteration:
+        # In case something goes wrong with the iteration, disable further movement in this direction
+        State.get_object("NextButton").set_sensitive(False)
+    except GLib.Error as ge:
+        # Invalid image data
+        error_dialog = State.get_object("ErrorDialog")
+        error_dialog.set_markup("<b>Error while loading next image</b>")
+        error_dialog.format_secondary_text(ge.message)
+        error_dialog.show_all()
 
-    def __getitem__(self, item: str):
-        """Retrieve the corresponding GTK widget."""
 
-        if not isinstance(item, str):
-            raise TypeError("Expected a string, given a: " + str(type(item)))
+def load_meta():
+    """Display metadata, pre-filling the fields."""
 
-        return self._builder.get_object(item)
+    State.get_object("IDLabel").set_label(str(State.view.image_id))
+    State.get_object("FileNameLabel").set_label(State.view.filename)
+    author = State.view.get_author()
+    State.get_object("AuthorField").set_text(author if author is not None else '')
+    universe = State.view.get_universe()
+    State.get_object("UniverseField").set_text(universe if universe is not None else '')
+    characters = State.view.get_characters()
+    State.get_object("CharactersField").set_text(characters if characters is not None else '')
+    tags = State.view.get_tags()
+    State.get_object("TagsField").get_buffer().set_text(tags if tags is not None else '')
+
+
+@Signals.register
+def save_meta(*args):
+    """Overwrite the image's metadata with the contents of the field."""
+
+    State.view.set_author(State.get_object("AuthorField").get_text())
+    State.view.set_universe(State.get_object("UniverseField").get_text())
+    State.view.set_characters(State.get_object("CharactersField").get_text())
+
+    tags_buffer = State.get_object("TagsField").get_buffer()
+    State.view.set_tags(tags_buffer.get_text(tags_buffer.get_start_iter(), tags_buffer.get_end_iter(), False))
+
+    try:
+        State.view.write()
+    except OSError as ose:
+        error_dialog = State.get_object("ErrorDialog")
+        error_dialog.set_markup("<b>Error while saving metadata</b>")
+        error_dialog.format_secondary_text(str(ose))
+        error_dialog.show_all()
+
+
+# Filtering #
+@Signals.register
+def add_filter(obj):
+    """Append an empty filter rule to the focused table."""
+
+    obj.append()
+
+
+@Signals.register
+def del_filter(*args):
+    """Delete the selected filter rule from the focused table."""
+
+    selected = State.get_object(args[0].get_name() + "Selection").get_selected()[1]
+    if selected is not None:
+        args[0].remove(selected)
+
+
+@Signals.register
+def set_filters(*args):
+    """Configure a filter builder and setup a filtered view."""
+
+    metadata_box_sensitiveness(False)
+
+    # Configure all filters in one, ugly pass
+    filter_builder = FilterBuilder()
+    for spec in State.get_object("IdFilters"):
+        filter_builder.id_constraint(spec[0], spec[1])
+    for spec in State.get_object("FilenameFilters"):
+        filter_builder.filename_constraint(spec[0], spec[1])
+    for spec in State.get_object("AuthorFilters"):
+        filter_builder.author_constraint(spec[0], spec[1])
+    for spec in State.get_object("UniverseFilters"):
+        filter_builder.universe_constraint(spec[0], spec[1])
+    for spec in State.get_object("CharacterFilters"):
+        filter_builder.character_constraint(spec[0], spec[1])
+    for spec in State.get_object("TagFilters"):
+        filter_builder.tag_constraint(spec[0], spec[1])
+
+    filter_builder.characters_as_disjunctive(State.get_object("CharactersDisjunctiveSwitch").get_active())
+    filter_builder.tags_as_disjunctive(State.get_object("TagsDisjunctiveSwitch").get_active())
+
+    setup_view(State.get_object("DirectoryOpener"), filter_builder)
+
+
+@Signals.register
+def clear_filters(*args):
+    State.get_object("IdFilters").clear()
+    State.get_object("FilenameFilters").clear()
+    State.get_object("AuthorFilters").clear()
+    State.get_object("UniverseFilters").clear()
+    State.get_object("CharacterFilters").clear()
+    State.get_object("TagFilters").clear()
+
+    State.get_object("CharactersDisjunctiveSwitch").set_active(False)
+    State.get_object("TagsDisjunctiveSwitch").set_active(False)
+
+
+@Signals.register
+def filter_edited(*args):
+    """Set the new filter matcher on the edited filter rule."""
+
+    store = args[0]
+    store.set_value(store.get_iter(args[1]), 0, args[2])
+
+
+@Signals.register
+def filter_neg_toggle(*args):
+    """Toggle the excluded flag on the edited filter rule."""
+
+    store = args[0]
+    siter = store.get_iter(args[1])
+    store.set_value(siter, 1, not store.get_value(siter, 1))
