@@ -7,7 +7,7 @@ from uri import URI
 
 from data.common import ImageMetadata
 from data.filexp import write_meta, load_meta
-from ui.gui_gtk.interface import GtkView
+from ui.gui_gtk.view import GtkView
 from ui.view import View
 
 

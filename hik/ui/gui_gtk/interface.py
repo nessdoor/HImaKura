@@ -1,41 +1,11 @@
-from importlib import resources
 from pathlib import Path
 from typing import Callable, Optional, MutableMapping
 
-from gi.repository import Gtk, GLib, Gio
-from gi.repository.GdkPixbuf import InterpType, Pixbuf
+from gi.repository import Gtk, GLib
+from gi.repository.GdkPixbuf import InterpType
 
 from data.filtering import FilterBuilder
-from ui.view import View
-
-
-class GtkView(View):
-    """Specialization of the View class that provides image data as Pixbuf objects."""
-
-    _current_image: Pixbuf
-
-    def load_prev(self) -> None:
-        super().load_prev()
-        self._current_image = Pixbuf.new_from_file(str(self._image_path))
-
-    def load_next(self) -> None:
-        super().load_next()
-        self._current_image = Pixbuf.new_from_file(str(self._image_path))
-
-    def has_image_data(self) -> bool:
-        return hasattr(self, '_current_image')
-
-    def get_image_data(self) -> Optional[Pixbuf]:
-        """
-        Return the current image as a pixbuf copy.
-
-        :return: a pixbuf containing the image, or None if no image has been loaded
-        """
-
-        if self.has_image_data():
-            return self._current_image.copy()
-        else:
-            return None
+from ui.gui_gtk.view import GtkView
 
 
 class Signals:
@@ -63,39 +33,6 @@ class State:
         """Retrieve the GTK object identified by the specified ID."""
 
         return cls.builder.get_object(obj_id)
-
-
-class GtkInstance(Gtk.Application):
-    """The GTK application instance for HImaKura."""
-
-    appId = "network.entropic.himakura"
-    interface_markup = resources.read_text('ui.gui_gtk', 'HImaKura.glade')
-
-    def __init__(self):
-        super().__init__(application_id=self.appId, flags=Gio.ApplicationFlags.FLAGS_NONE)
-
-        # Connect signal handlers for this application
-        self.connect("startup", self.startup)
-        self.connect("activate", self.activate)
-        self.connect("shutdown", self.shutdown)
-
-    def startup(self, *args):
-        """Load the interface description file and connect the signal handlers."""
-
-        State.builder = Gtk.Builder.new_from_string(self.interface_markup, -1)
-        State.builder.connect_signals(Signals.handlers)
-
-    def activate(self, *args):
-        """Register the application window with the instance and show the main interface."""
-
-        main_window = State.get_object("MainWindow")
-        self.add_window(main_window)
-        main_window.present()
-
-    def shutdown(self, *args):
-        """Destroy the application window."""
-
-        State.get_object("MainWindow").destroy()
 
 
 # Utilities #
