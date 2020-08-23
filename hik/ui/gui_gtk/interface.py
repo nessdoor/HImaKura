@@ -179,10 +179,7 @@ def show_previous_image(*args):
         State.get_object("PrevButton").set_sensitive(False)
     except GLib.Error as ge:
         # Invalid image data
-        error_dialog = State.get_object("ErrorDialog")
-        error_dialog.set_markup("<b>Error while loading previous image</b>")
-        error_dialog.format_secondary_text(ge.message)
-        error_dialog.show_all()
+        notify_error("<b>Error while loading previous image</b>", ge.message)
 
 
 @Signals.register
@@ -199,10 +196,7 @@ def show_next_image(*args):
         State.get_object("NextButton").set_sensitive(False)
     except GLib.Error as ge:
         # Invalid image data
-        error_dialog = State.get_object("ErrorDialog")
-        error_dialog.set_markup("<b>Error while loading next image</b>")
-        error_dialog.format_secondary_text(ge.message)
-        error_dialog.show_all()
+        notify_error("<b>Error while loading next image</b>", ge.message)
 
 
 def load_meta():
@@ -312,3 +306,9 @@ def filter_neg_toggle(*args):
     store = args[0]
     siter = store.get_iter(args[1])
     store.set_value(siter, 1, not store.get_value(siter, 1))
+
+
+# Error dialog response
+@Signals.register
+def error_clear(*args):
+    args[0].hide()

@@ -510,7 +510,7 @@
     <property name="transient_for">MainWindow</property>
     <property name="message_type">error</property>
     <property name="buttons">close</property>
-    <signal name="response" handler="hide_on_delete" swapped="no"/>
+    <signal name="response" handler="error_clear" swapped="no"/>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can_focus">False</property>
