@@ -279,6 +279,7 @@ def save_meta(*args):
 
     try:
         State.view.write()
+        State.changed = False
     except OSError as ose:
         notify_error("<b>Error while saving metadata</b>", str(ose))
 
@@ -366,7 +367,6 @@ def error_clear(*args):
 # "Unsaved changes" dialog response
 @Signals.register
 def save_changes(*args):
-    State.changed = False
     save_meta()
     State.interrupted_action()
 
