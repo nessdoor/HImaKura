@@ -92,7 +92,7 @@ def clear(obj):
     if isinstance(obj, Gtk.Entry):
         obj.set_text('')
     elif isinstance(obj, Gtk.TextView):
-        obj.get_buffer.set_text('')
+        obj.get_buffer().set_text('')
 
 
 @Signals.register
