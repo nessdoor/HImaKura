@@ -27,6 +27,9 @@ class State:
 
     builder: Gtk.Builder = None
     view: GtkView = None
+    inhibit_changed: bool = False
+    changed: bool = False
+    interrupted_action: Optional[Callable] = None
 
     @classmethod
     def get_object(cls, obj_id: str):
@@ -56,11 +59,26 @@ def metadata_box_sensitiveness(sensitive: bool):
     State.get_object("ClearButton").set_sensitive(sensitive)
 
 
+def trigger_unsaved_warning(continuation: Callable):
+    """Display the 'unsaved changes' warning and record the suspended action."""
+
+    State.interrupted_action = continuation
+    State.get_object("ChangedWarningDialog").show_all()
+
+
 @Signals.register
 def set_sensitive(obj):
     """Make an object sensitive."""
 
     obj.set_sensitive(True)
+
+
+@Signals.register
+def set_changed_flag(*args):
+    """Set the global 'changed' flag."""
+
+    if not State.inhibit_changed:
+        State.changed = True
 
 
 @Signals.register
@@ -99,6 +117,16 @@ def destroy(obj):
 
 
 @Signals.register
+def safe_destroy(obj):
+    """Check for unsaved changes before destroying."""
+
+    if State.changed:
+        trigger_unsaved_warning(lambda: destroy(obj))
+    else:
+        destroy(obj)
+
+
+@Signals.register
 def hide_on_delete(obj):
     obj.hide_on_delete()
 
@@ -117,6 +145,14 @@ def hide(obj):
 @Signals.register
 def setup_view(chooser, filtering_context: Optional[FilterBuilder] = None):
     """Setup the View object and activate buttons and fields."""
+
+    metadata_box_sensitiveness(False)
+
+    # Don't setup a new view until all modifications have been accounted for
+    if State.changed:
+        trigger_unsaved_warning(lambda: setup_view(chooser, filtering_context))
+        metadata_box_sensitiveness(True)
+        return
 
     try:
         State.view = GtkView(Path(chooser.get_filename()), filtering_context)
@@ -168,6 +204,11 @@ def refresh_image(*args):
 @Signals.register
 def show_previous_image(*args):
     try:
+        if State.changed:
+            # Halt in the presence of unsaved changes
+            trigger_unsaved_warning(show_previous_image)
+            return
+
         State.view.load_prev()
         refresh_image()
         load_meta()
@@ -185,6 +226,11 @@ def show_previous_image(*args):
 @Signals.register
 def show_next_image(*args):
     try:
+        if State.changed:
+            # Halt in the presence of unsaved changes
+            trigger_unsaved_warning(show_next_image)
+            return
+
         State.view.load_next()
         refresh_image()
         load_meta()
@@ -202,6 +248,9 @@ def show_next_image(*args):
 def load_meta():
     """Display metadata, pre-filling the fields."""
 
+    # Stop entries from setting the 'changed' flag
+    State.inhibit_changed = True
+
     State.get_object("IDLabel").set_label(str(State.view.image_id))
     State.get_object("FileNameLabel").set_label(State.view.filename)
     author = State.view.get_author()
@@ -212,6 +261,9 @@ def load_meta():
     State.get_object("CharactersField").set_text(characters if characters is not None else '')
     tags = State.view.get_tags()
     State.get_object("TagsField").get_buffer().set_text(tags if tags is not None else '')
+
+    # Re-enable the 'changed' flag
+    State.inhibit_changed = False
 
 
 @Signals.register
@@ -228,10 +280,7 @@ def save_meta(*args):
     try:
         State.view.write()
     except OSError as ose:
-        error_dialog = State.get_object("ErrorDialog")
-        error_dialog.set_markup("<b>Error while saving metadata</b>")
-        error_dialog.format_secondary_text(str(ose))
-        error_dialog.show_all()
+        notify_error("<b>Error while saving metadata</b>", str(ose))
 
 
 # Filtering #
@@ -312,3 +361,17 @@ def filter_neg_toggle(*args):
 @Signals.register
 def error_clear(*args):
     args[0].hide()
+
+
+# "Unsaved changes" dialog response
+@Signals.register
+def save_changes(*args):
+    State.changed = False
+    save_meta()
+    State.interrupted_action()
+
+
+@Signals.register
+def ignore_changes(*args):
+    State.changed = False
+    State.interrupted_action()

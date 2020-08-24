@@ -24,6 +24,9 @@ class GtkInstance(Gtk.Application):
 
         State.builder = Gtk.Builder.new_from_string(self.interface_markup, -1)
         State.builder.connect_signals(Signals.handlers)
+        
+        # Attach special change-detection handler to the buffer of the tags box, since it can't be done from Glade
+        State.get_object("TagsField").get_buffer().connect("changed", Signals.handlers["set_changed_flag"])
 
     def activate(self, *args):
         """Register the application window with the instance and show the main interface."""
