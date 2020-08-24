@@ -543,7 +543,6 @@
   </object>
   <object class="GtkFileChooserDialog" id="DirectoryOpener">
     <property name="can_focus">False</property>
-    <property name="type">popup</property>
     <property name="modal">True</property>
     <property name="window_position">center</property>
     <property name="destroy_with_parent">True</property>
@@ -551,6 +550,8 @@
     <property name="transient_for">MainWindow</property>
     <property name="action">select-folder</property>
     <property name="create_folders">False</property>
+    <property name="preview_widget_active">False</property>
+    <property name="use_preview_label">False</property>
     <signal name="current-folder-changed" handler="valid_path_check" swapped="no"/>
     <signal name="delete-event" handler="hide_on_delete" swapped="no"/>
     <signal name="selection-changed" handler="valid_path_check" swapped="no"/>
